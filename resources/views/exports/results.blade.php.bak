@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Years Diploma in Vocation in Cyber Security (1st Semester)</title>
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: helvetica;
+            font-size:12px;
+        }
+
+        /* @page {
+            margin: 200px 30px 50px 30px;
+        } */
+
+        .container {
+            width: 282mm;
+            /* max-width: 1024px; */
+            /* width: 100%;
+            min-height: 100vh;
+            margin: auto;
+            padding: 10px; */
+            margin: 70px 30px 50px 30px;
+        }
+
+        .header {
+            position: fixed;
+            top: 10px;
+            width: 281mm;
+        }
+
+        .head-scetion,
+        .mid-section {
+            width: 100%;
+            height: auto;
+            padding: 10px;
+        }
+
+        .header-container {
+            text-align: center;
+        }
+        .header-container h3 {
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .header-container h6 {
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        table.no-border {
+            border: none;
+        }
+        table.no-border td {
+            padding: 2px;
+            border: none;
+            text-align: left;
+        }
+
+        .table-container {
+            width: 95%;
+            min-height: 50vh;
+            margin-top: 5px;
+        }
+
+        table {
+            border: 1px solid #000000;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+            min-width: 100%;
+            
+            font-size:11px;
+        }
+
+        table th {
+            padding: 3px;
+            border: 1px solid #000000;
+            font-weight: bold;
+            text-align: center
+        }
+
+        table td {
+            padding: 2px;
+            border: 1px solid #000000;
+        }
+
+        table tr {
+            text-align: center;
+        }
+
+
+    </style>
+</head>
+<?php
+$th_cnt = $theory_papers;
+$ses_cnt = $sessional_papers;
+$tot_paper_cnt = $th_cnt + $ses_cnt;
+$row_span = $tot_paper_cnt > 7 ? 6 : 5;
+
+?>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-container">
+                <h3>west bengal state council of technical and vocational education and skill development</h3>
+                <h6>{{ $course_duration }} Diploma in Vocation in {{ $course_name }} &#40;{{ $semester }}&#41;</h6>
+            </div>
+
+            <table class="no-border">
+                <tr>
+                    <td style="width:50%">
+                        <strong>Center: {{ $institute_name }}</strong>
+                    </td>
+                    <td style="width:50%; text-align: right;">
+                        <strong>Held in: {{ $examYear }}</strong>
+                    </td>
+                </tr>
+            </table>
+        </div>    
+
+
+            <div class="main">
+                <table>
+                    <tbody>
+                        <tr>
+                        <tr>
+                            <td colspan="1" rowspan="2">ROLL</td>
+                            <td colspan="1" rowspan="2">{{ $institute_code }} /
+                                            {{ $course_code }} / {{ $course_name }} / {{ $semester }}</td>
+                            <td colspan="{{ $th_cnt }}" rowspan="1">THEORITICAL</td>
+                            <td colspan="{{ $ses_cnt }}" rowspan="1">SESSIONAL</td>
+                            <td colspan="1" rowspan="2"style="font-weight: bold;">TOTAL</td>
+                            <<td colspan="1" rowspan="2"style="font-weight: bold;">REMARKS</td>
+                        </tr>
+                        </tr>
+                        <tr>
+                        @foreach ($papers as $key => $row)
+                                <td>
+                                     {{ $row->paper_name }}
+                                </td>
+                        @endforeach        
+                        </tr>
+                        <tr>
+                            <td colspan="2" rowspan="1"style="font-weight: bold;">Full Marks</td>
+                            @foreach ($papers as $k => $val)
+                                            @php
+                                                $total[] = $val->paper_full_marks;
+                                                $totalFullMarks = array_sum($total);
+                                            @endphp
+                                            <td>{{ $val->paper_full_marks }}</td>
+                            @endforeach
+                                        <td>{{ $totalFullMarks }}</td>
+                            <td colspan="1" rowspan="5">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" rowspan="1"style="font-weight: bold;">Pass Marks</td>
+                            @foreach ($papers as $pkey => $pval)
+                                            <td>{{ $pval->paper_pass_marks }}</td>
+                                        @endforeach
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" rowspan="4">&nbsp;</td>
+                            <td>INT</td>
+                            <td>INT</td>
+                            <td>INT</td>
+                            <td>INT</td>
+                            <td>INT</td>
+                            <td>INT</td>
+                            <td>-</td>
+                            <td colspan="1" rowspan="4">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>ATD</td>
+                            <td>ATD</td>
+                            <td>ATD</td>
+                            <td>ATD</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>EXT</td>
+                            <td>EXT</td>
+                            <td>EXT</td>
+                            <td>EXT</td>
+                            <td>EXT</td>
+                            <td>EXT</td>
+                            <td>EXT</td>
+                        </tr>
+                        <tr>
+                            <td>TOT</td>
+                            <td>TOT</td>
+                            <td>TOT</td>
+                            <td>TOT</td>
+                            <td>TOT</td>
+                            <td>TOT</td>
+                            <td>TOT</td>
+                            <td colspan="1" rowspan="2">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>NUMBER</td>
+                            <td>NAME OF THE CANDIDATE</td>
+                            <td colspan="8" rowspan="1">&nbsp;</td>
+                        </tr>
+                        @php
+                                        //Start Student Dynamic
+                        @endphp
+                        @foreach ($students as $skey => $student)
+                            <tr>
+                            <td>{{ $student['sl_no'] }}</td>
+                                <td colspan="1" rowspan="5">{{ $student['student_name'] }}</td>
+                                <td>{{ $student['sub1_th_int_marks'] }}</td>
+                                <td>{{ $student['sub2_th_int_marks'] }}</td>
+                                <td>{{ $student['sub3_th_int_marks'] }}</td>
+                                <td>{{ $student['sub4_th_int_marks'] }}</td>
+                                <td>{{ $student['sub6_th_int_marks'] }}</td>
+                                <td>{{ $student['sub7_th_int_marks'] }}</td>
+                                <td>&nbsp;</td>
+                                <td colspan="1" rowspan="5">{{ $student['GRAND_TOTAL'] }}</td>
+                                <td colspan="1" rowspan="5">{{ $student['RESULT'] }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="1" rowspan="4">&nbsp;</td>
+                                <td>{{ $student['sub1_th_int_attd_marks'] }}</td>
+                                <td>{{ $student['sub2_th_int_attd_marks'] }}</td>
+                                <td>{{ $student['sub3_th_int_attd_marks'] }}</td>
+                                <td>{{ $student['sub4_th_int_attd_marks'] }}</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td>{{ $student['sub1_th_ext_marks'] }}</td>
+                                <td>{{ $student['sub2_th_ext_marks'] }}</td>
+                                <td>{{ $student['sub3_th_ext_marks'] }}</td>
+                                <td>{{ $student['sub4_th_ext_marks'] }}</td>
+                                <td>{{ $student['sub6_ext_session_marks'] }}</td>
+                                <td>{{ $student['sub7_ext_session_marks'] }}</td>
+                                <td>{{ $student['SUB8_OB_MK'] }}</td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td>{{ $student['SUB1_OB_MK'] }}</td>
+                                <td>{{ $student['SUB2_OB_MK'] }}</td>
+                                <td>{{ $student['SUB3_OB_MK'] }}</td>
+                                <td>{{ $student['SUB4_OB_MK'] }}</td>
+                                <td>{{ $student['SUB6_OB_MK'] }}</td>
+                                <td>{{ $student['SUB7_OB_MK'] }}</td>
+                                <td>{{ $student['SUB8_OB_MK'] }}</td>
+                            </tr>
+                            
+                        
+                    </tbody>
+                            @endforeach
+                                            @php
+                                                //End Student Dynamic
+                                            @endphp
+                </table>
+
+                
+                    
+                   
+			</div>
+        <!-- </section> -->
+    </div>
+</body>
+
+</html>
