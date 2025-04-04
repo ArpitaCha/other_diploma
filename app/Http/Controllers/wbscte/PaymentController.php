@@ -129,7 +129,7 @@ class PaymentController extends Controller
             $reg_list = implode(',', $reg_array);
     
             if ($total_amount) {
-                $other_data =  "{$inst_id}_{$student_data['student_course_id']}_{$student_data['student_session_yr']}_{$student_data['student_payment_for']}_{$student_data['student_application_form_num']}_{$student_data['student_semester']}_{$total_amount}";
+                $other_data =  "{$inst_id}_{$course_id}_{$academic_year}_{$paying_for}_{$semester}_{$total_amount}";
     
                 $orderid = '';
                 for ($i = 0; $i < 10; $i++) {
