@@ -17,10 +17,10 @@ class PaymentController extends Controller
                             ->where('rf_appl_form_num', $student_data['student_application_form_num'])
                             ->where('rf_semester', $student_data['student_semester'])
                             ->where('rf_fees_type', $student_data['student_payment_for'])->first();
+                            
 
         //dd($total_appl_amount->rf_fees_amount);
         $amount = $total_appl_amount->rf_fees_amount;
-
         if ($amount > '0') {
             $other_data = "{$student_data['student_inst_id']}_{$student_data['student_course_id']}_{$student_data['student_session_yr']}_{$student_data['student_payment_for']}_{$student_data['student_application_form_num']}_{$student_data['student_semester']}_{$total_appl_amount['rf_appl_order_no']}";
 
@@ -105,6 +105,68 @@ class PaymentController extends Controller
             ]);
         }
 
+    }
+    public function payExaminationFees(Request $request)
+    {
+            $student_data = $request->student_info;
+            $inst_id = $request->inst_id;
+            $course_id = $request->course_id;
+            $paying_for = $request->paying_for;
+            $semester = $request->semester;
+            $academic_year = $request->academic_year;
+            // $user_id = authUserId();
+    
+            $reg_array = collect($request->student_info)->pluck('reg_no')->toArray();
+    
+            $fees_data = Fees::where([
+                'inst_id' => $request->inst_id,
+                'course_id' => $request->course_id,
+                'type' => $request->paying_for,
+                'semester' => $request->semester,
+            ])->whereIn('reg_no', $reg_array);
+    
+            $total_amount = $fees_data->sum('amount');
+            $reg_list = implode(',', $reg_array);
+    
+            if ($total_amount) {
+                $other_data =  "{$inst_id}_{$student_data['student_course_id']}_{$student_data['student_session_yr']}_{$student_data['student_payment_for']}_{$student_data['student_application_form_num']}_{$student_data['student_semester']}_{$total_amount}";
+    
+                $orderid = '';
+                for ($i = 0; $i < 10; $i++) {
+                    $d = rand(1, 30) % 2;
+                    $d = $d ? chr(rand(65, 90)) : chr(rand(48, 57));
+                    $orderid .= $d;
+                }
+    
+                PaymentTransaction::create([
+                    'order_id' => $orderid,
+                    'initiated_by' => authUserId(),
+                    'initiated_at' => now(),
+                    'paying_for' => $paying_for,
+                    'class' => $class,
+                    'trans_amount' => $total_amount,
+                    'user_code' => $vtc_code,
+                ]);
+    
+                $fees_data->update([
+                    'order_id' => $orderid,
+                ]);
+    
+                auditTrail(authUserId(), "Payment initiated for students: {$reg_list} with order id : {$orderid} for {$paying_for}");
+    
+                return response()->json([
+                    'error' => false,
+                    'message' => 'Payment Data Found',
+                    'payment_data' => getPaymentData($orderid, $total_amount, $other_data)
+                ]);
+            } else {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Something went wrong, Try Again Later'
+                ]);
+            }
+        
+    
     }
     public function paymentSuccess(Request $request)
     {

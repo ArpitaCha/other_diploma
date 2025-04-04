@@ -115,6 +115,7 @@ Route::prefix('dashboard')->group(function () {
 });
 Route::prefix('enrollment')->group(function () {
     Route::post('/list', [EnrollmentController::class, 'list']);
+    Route::post('/enroll-submit', [EnrollmentController::class, 'submit']);
 });
 Route::prefix('admission')->group(function () {
     Route::post('/semone-admission-form', [AdmissionController::class, 'semOneadmissionFormSubmit']);
@@ -123,14 +124,16 @@ Route::prefix('admission')->group(function () {
     Route::post('/appl-verify-status', [AdmissionController::class, 'applicationVerificationInstitute']);
     Route::post('/upload-image-sign', [AdmissionController::class, 'uploadImageSign']);
     Route::post('/approve-council', [AdmissionController::class, 'approvedCouncil']);
+    Route::post('/approve-all', [AdmissionController::class, 'approvedAll']);
     Route::post('/update-student', [AdmissionController::class, 'updateStudent']);
-    Route::post('send-mail', [AdmissionController::class, 'sendMail']);
+    // Route::post('send-mail', [AdmissionController::class, 'sendMail']);
 
 
 });
 Route::prefix('payment')->group(function () {
     Route::post('/pay-application-fees', [PaymentController::class, 'payApplicationFees']);
     Route::post('/pay-registration-fees', [PaymentController::class, 'payRegistrationFees']);
+    Route::post('/pay-examination-fees', [PaymentController::class, 'payExaminationFees']);
 });
 
 
