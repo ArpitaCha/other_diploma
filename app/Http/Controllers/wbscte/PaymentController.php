@@ -143,9 +143,9 @@ class PaymentController extends Controller
                     'initiated_by' => authUserId(),
                     'initiated_at' => now(),
                     'paying_for' => $paying_for,
-                    'class' => $class,
+                    'course' => $course,
                     'trans_amount' => $total_amount,
-                    'user_code' => $vtc_code,
+                    'inst_id' => $inst_id,
                 ]);
     
                 $fees_data->update([
@@ -195,7 +195,13 @@ class PaymentController extends Controller
         $semester = $other_data[5];
         $order_number = $other_data[6];
 
-        $status = ($paying_for === 'APPLICATION') ? 2 : (($paying_for === 'REGISTRATION') ? 5 : null);
+        $map = [
+            'APPLICATION' => 2,
+            'REGISTRATION' => 5,
+            'EXAMINATION' => 7,
+        ];
+        
+        $status = $map[$paying_for] ?? null;
 
         if ($status !== null) {
             Student::where([
@@ -231,7 +237,23 @@ class PaymentController extends Controller
                     'form_no' =>  $form_num,
                     'semester' => $semester
                 ]);
-                auditTrail($form_num, "Payment {$trans_status} for Application No: {$form_num}, ORDER ID: {$order_id}, TRANSACTION ID: {$trans_id}");
+                EnrollmentDetail::where([
+                    'inst_id' => $inst_id,
+                    'academic_year' => $academic_year,
+                    'semester' => $semester,
+                    'course_id' => $course,
+                    'session_year' => $academic_year,
+                ])->whereIn('reg_no', $reg_no_arr)
+                    ->update([
+                        'is_paid' => 1,
+                        'is_eligible_for_exam' => 1
+                    ]);
+                    if ($paying_for === 'EXAMINATION') {
+                        auditTrail($reg_no_arr, "Exam fee payment {$trans_status} for reg No are: {$reg_no_arr}, ORDER ID: {$order_id}, TRANSACTION ID: {$trans_id}");
+                    } else {
+                        auditTrail($form_num, "Payment {$trans_status} for Application No: {$form_num}, ORDER ID: {$order_id}, TRANSACTION ID: {$trans_id}");
+                    }
+                // auditTrail($form_num, "Payment {$trans_status} for Application No: {$form_num}, ORDER ID: {$order_id}, TRANSACTION ID: {$trans_id}");
 
                 return redirect()->route('payment.redirect', [
                     'trans_id' => $trans_id,

@@ -210,56 +210,7 @@ class OtherController extends Controller
     }
 
     //Payment 
-    public function payment()
-    {
-        //1001954 || 1000605
-        $orderid = '';
-        for ($i = 0; $i < 10; $i++) {
-            $d = rand(1, 30) % 2;
-            $d = $d ? chr(rand(65, 90)) : chr(rand(48, 57));
-            $orderid = $orderid . $d;
-        }
-        $base_url = env('APP_URL') . '/payment/';
-        $success_url = $base_url . 'success';
-        //echo $success_url;
-        $fail_url = $base_url . 'fail';
-        $key = "pWhMnIEMc4q6hKdi2Fx50Ii8CKAoSIqv9ScSpwuMHM4=";
-        $other            =    "OD";
-        $marid =  '5';
-        $merchant_order_num = $orderid;
-        $total_amount = 500.00;
-        $requestParameter  = "1000605|DOM|IN|INR|" . $total_amount . "|" . $other . "|" . $success_url . "|" . $fail_url . "|SBIEPAY|" . $merchant_order_num . "|" . $marid . "|NB|ONLINE|ONLINE,pWhMnIEMc4q6hKdi2Fx50Ii8CKAoSIqv9ScSpwuMHM4=";
-
-        // 1000605|DOM|IN|INR|500|Other|https://council.aranax.tech/diploma/services/public/payment/success|https://council.aranax.tech/diploma/services/public/payment/fail|SBIEPAY|A8ZJ40X3LB|2|NB|ONLINE|ONLINE
-
-        $aes =  new AESEncDec();
-        $EncryptTrans = $aes->encrypt($requestParameter, $key);
-        $decrypt = $aes->decrypt($EncryptTrans, $key);
-        // echo $EncryptTrans . '=====' . $decrypt;
-        // die();
-
-        $merchIdVal = '1000605';
-        return view('test', compact('EncryptTrans', 'merchIdVal'));
-    }
-    public function paymentSuccess(Request $request)
-    {
-        $key = "pWhMnIEMc4q6hKdi2Fx50Ii8CKAoSIqv9ScSpwuMHM4=";
-        //dd($request->all());
-        $aes =  new AESEncDec();
-        // $EncryptTrans = $aes->encrypt($requestParameter, $key);
-        $decrypt = $aes->decrypt($request->encData, $key);
-        dd($decrypt);
-    }
-
-    public function paymentFail(Request $request)
-    {
-        $key = "pWhMnIEMc4q6hKdi2Fx50Ii8CKAoSIqv9ScSpwuMHM4=";
-        //dd($request->all());
-        $aes =  new AESEncDec();
-        // $EncryptTrans = $aes->encrypt($requestParameter, $key);
-        $decrypt = $aes->decrypt($request->encData, $key);
-        dd($decrypt);
-    }
+  
 
     public function resultPdf(Request $request)
     {
@@ -755,15 +706,20 @@ class OtherController extends Controller
         $payments = PaymentTransaction::where([
             'initiated_by' => $form_num
         ])->whereIn('paying_for', ['APPLICATION', 'REGISTRATION'])->get();
+        // dd($payments);
         $paymentDetails = $payments->map(function ($payment) {
             return [
                 'paying_for' => $payment->paying_for,
                 'amount' => $payment->trans_amount,
                 'status' => $payment->trans_status,
                 'transaction_id' => $payment->trans_id,
+                'status' => $payment->trans_status,
+                'trans_date' => $payment->trans_time 
+                // 'trans_amount' => $payment->trans_amount,
             ];
-        });
-        $pdf = Pdf::loadView('exports.application-fees', [
+        })->toArray();
+        // dd($paymentDetails);
+        $pdf = Pdf::loadView('exports.student-details', [
             'students' => $students,
             'institute_name' => $institute->institute_name,
             'institute_code' => $institute->institute_code,
@@ -775,6 +731,6 @@ class OtherController extends Controller
         ]);
         return $pdf->setPaper('a4', 'landscape')
             ->setOption(['defaultFont' => 'sans-serif'])
-            ->stream('application-fees.pdf');
+            ->stream('student-details.pdf');
     }
 }

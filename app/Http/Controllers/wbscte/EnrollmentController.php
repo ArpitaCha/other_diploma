@@ -17,6 +17,7 @@ use App\Models\wbscte\CnfgMarks;
 use Illuminate\Support\Facades\DB;
 use App\Models\wbscte\User;
 use App\Models\wbscte\TheorySubject;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 class EnrollmentController extends Controller
@@ -353,5 +354,143 @@ class EnrollmentController extends Controller
         }
         
 
+    }
+    public function downloadPdf(Request $request)
+    {
+        // dd($request->all());
+        // $request->validate([
+        
+        //     'inst_id' => ['required'],
+        //     'inst_name' => ['required'],
+        //     'course_id' => ['required'],
+        //     'academic_year' => ['required'],
+        //     'file_type' => ['required'],
+        
+        //     'semester' => ['required'],
+        //     'type' => ['nullable'],
+        // ]);
+
+     
+        $inst_id = $request->inst_id;
+        $inst_name = $request->inst_name;
+        $course_id = $request->course;
+        $academic_year = $request->academic_year;
+        $file_type = $request->file_type; 
+        $semester = $request->semester;
+        
+        $course = Course::select('course_code','course_name')->where('course_id_pk', $course_id)->first();
+      
+       
+       $course_code = $course->course_code;
+     
+        // if ($course_code == 'HMCT') {
+        //     $fees_code = 'EXMHMCTS1';
+        //     $late_fees_code = 'EXAMLHMCT';
+        // } else {
+        //     $fees_code = 'EXMOTHS1';
+        //     $late_fees_code = 'EXAMLOTH';
+        // }
+        // dd($course_code);
+       $course_name = $course->course_name;
+       if($course_code == 'HMCT'){
+        $fees_cnfg = ConfigFees::where([
+            'cf_fees_type' => 'EXAMINATION',
+            'cf_fees_code' => 'EXMHMCTS1',
+            'cf_semester' => $semester,
+        ])->first();
+
+       }else{
+        $fees_cnfg = ConfigFees::where([
+            'cf_fees_type' => 'EXAMINATION',
+            'cf_fees_code' => 'EXMOTHS1',
+            'cf_semester' => $semester,
+        ])->first();
+       }
+        if (!$fees_cnfg) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Enrollment Fees Not Configured in the system'
+            ]);
+       }
+          
+
+        $enrollment_fees = $fees_cnfg->cf_fees_amount;
+        // $late_fees = $fees_cnfg->late_fees;
+
+        $fees_reg_nos = Fees::where([
+            'inst_id' => $inst_id,
+            'course_id' => $course_id,
+            'type' => 'EXAMINATION',
+            'academic_session' => $academic_year,
+            'semester' => $semester
+        ])->pluck('reg_no');
+
+        $enrollments = Enrollment::where([
+            'academic_year' => $academic_year,
+            'inst_id' => $inst_id,
+            'course_id' => $course_id,
+            'semester' =>  $semester,
+        ])->whereIn('reg_no', $fees_reg_nos)
+            ->with('student')
+            ->get();
+            $enroll = $enrollments->first(); // 👈 Get the first item
+
+dd([
+    'reg_no' => $enroll->reg_no,
+    'student' => $enroll->student,
+    'student_reg_no' => optional($enroll->student)->student_reg_no,
+    'student_fullname' => optional($enroll->student)->student_fullname,
+]);
+           
+            // dd($enrollments);
+           
+
+        if ($enrollments->count()) {
+            
+            if ($file_type == 'ENROLLMENT_SHEET') {
+                $enroll_list = $enrollments->orderBy('reg_no', 'asc')
+                    ->get()
+                    ->map(function ($value, $key) {
+
+                        return [
+                            'sl_no' => $key + 1,
+                            'stu_name' => $value->student_fullname,
+                            'stu_reg_no' => $value->student_reg_no,
+                            'session_year' => $value->student_session_yr,
+                            'stu_reg_year' => optional($value->student)->student_reg_year,
+                            'guardian' => optional($value->student)->student_guardian_name,
+                            // 'image' => $this->studentImage($value->student)
+                        ];
+                    });
+
+                    $pdf = Pdf::loadView('exports.enrollment-sheet', [
+                        'students' => $enroll_list,
+                        'inst_id' => $inst_id,
+                        'course_id' => $course_id,
+                        'inst_name' => $inst_name,
+                        'academic_year' => $academic_year,
+                        'exam_fees' => $enrollment_fees,
+                        // 'late_fine' => $late_fees,
+                        'semester' => $semester,
+                        
+                    ]);
+
+                    $pdf->setPaper('A4', 'portrait');
+                    $pdf->output();
+                    $domPdf = $pdf->getDomPDF();
+                    $canvas = $domPdf->get_canvas();
+                    $canvas->page_text(10, 5, "Page {PAGE_NUM} of {PAGE_COUNT}", null, 10, [0, 0, 0]);
+
+                    return $pdf->setPaper('a4', 'portrait')
+                        ->setOption(['defaultFont' => 'sans-serif'])
+                        ->stream("Enrollment-Sheet.pdf");
+           
+            }
+        } else {
+            return response()->json([
+                'error' => true,
+                'message' => 'No Data Found'
+            ]);
+        }
     }
 }

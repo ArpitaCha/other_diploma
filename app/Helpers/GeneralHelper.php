@@ -22,6 +22,13 @@ if (!function_exists('generateLaravelLog')) {
         // dd($controller, $action);
     }
 }
+if (!function_exists('getLoggedInUserId')) {
+    
+    function getLoggedInUserId()
+    {
+        return auth()->u_id();  
+    }
+}
 
 if (!function_exists("auditTrail")) {
     function auditTrail($user_id, $task)
@@ -228,6 +235,10 @@ function sbiEncrypt($data)
     );
 
     return base64_encode($cipherText);
+}
+function currentDateTime()
+{
+    return date('Y-m-d H:i:s');
 }
 
 function sbiDecrypt($data)

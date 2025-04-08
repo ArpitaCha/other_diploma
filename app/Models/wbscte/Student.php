@@ -49,4 +49,10 @@ class Student extends Model
             return new Subdivision();
         });
     }
+    public function enrollment()
+    {
+        return $this->hasOne('App\Models\wbscte\Enrollment', "reg_no", "student_reg_no")->withDefault(function () {
+            return new Enrollment();
+        });
+    }
 }

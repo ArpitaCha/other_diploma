@@ -146,6 +146,7 @@ class AdmissionController extends Controller
                                             }
                                         }
                                        $total_fees =  $results->get();
+                                      
                                 if($request->student_citizenship == 'INDIAN'){
                                     if ($course['course_code'] == 'ADCS' && $request->student_highest_qualification == 'GSC') 
                                     {
@@ -273,6 +274,7 @@ class AdmissionController extends Controller
                                     $signaturePath = 'uploads/signature/' . $signatureName;
                                  
                                 }
+                             
                                 // dd($signatureName);
                             if($adm_open_status){
                                 $new_student = Student::create([
@@ -480,17 +482,18 @@ class AdmissionController extends Controller
                                     'name'=>$data->student_fullname,
                                     'inst_name'=>optional($data->institute)->institute_name,
                                     'course_name'=>optional($data->course)->course_name,
-                                    'is_applied' => $data->student_status_s1 <= 1,
-                                    'is_paid'=>$data->student_status_s1 <= 2,
-                                    'is_verified'=>$data->student_status_s1 <= 3,
-                                    'is_updated' => $data->student_status_s1 <= 4,
-                                    'is_reg_fees'=>$data->student_status_s1 <= 5,
-                                    'is_approved' => $data->student_status_s1 <= 6,
-                                    'is_rejected'=>$data->student_status_s1 <= 9,
-                                    'is_approved_all'=>$data->student_status_s1 <= 6,
+                                    'is_applied' => $data->student_status_s1 == 1,
+                                    'is_paid'=>$data->student_status_s1 == 2,
+                                    'is_verified'=>$data->student_status_s1 == 3,
+                                    'is_updated' => $data->student_status_s1 == 4,
+                                    'is_reg_fees'=>$data->student_status_s1 == 5,
+                                    'is_approved' => $data->student_status_s1 == 6,
+                                    'is_rejected'=>$data->student_status_s1 == 9,
+                                    'is_approved_all'=>$data->student_status_s1 == 6,
                                   
                                 ];
                              });
+                            //  dd($student_adm_list);
                    
                             }else{
                                 $reponse = array(
@@ -510,14 +513,14 @@ class AdmissionController extends Controller
                                     'name'=>$data->student_fullname,
                                     'inst_name'=>optional($data->institute)->institute_name,
                                     'course_name'=>optional($data->course)->course_name,
-                                    'is_applied' => $data->student_status_s1 <= 1,
-                                    'is_paid'=>$data->student_status_s1 <= 2,
-                                    'is_verified'=>$data->student_status_s1 <= 3,
-                                    'is_updated' => $data->student_status_s1 <= 4,
-                                    'is_reg_fees'=>$data->student_status_s1 <= 5,
-                                    'is_approved' => $data->student_status_s1 <= 6,
-                                    'is_rejected'=>$data->student_status_s1 <= 9,
-                                    'is_approved_all' => $data->student_status_s1 <= 6,
+                                    'is_applied' => $data->student_status_s1 == 1,
+                                    'is_paid'=>$data->student_status_s1 == 2,
+                                    'is_verified'=>$data->student_status_s1 == 3,
+                                    'is_updated' => $data->student_status_s1 == 4,
+                                    'is_reg_fees'=>$data->student_status_s1 == 5,
+                                    'is_approved' => $data->student_status_s1 == 6,
+                                    'is_rejected'=>$data->student_status_s1 == 9,
+                                    'is_approved_all' => $data->student_status_s1 == 6,
                                 ];
                              });
                             //  dd($student_adm_list);
