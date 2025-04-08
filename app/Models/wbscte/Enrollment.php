@@ -15,9 +15,7 @@ class Enrollment extends Model
     protected $guarded = [];
     public function student()
     {
-        return $this->hasOne('App\Models\wbscte\Student', "student_reg_no", "reg_no")->withDefault(function () {
-            return new Student();
-        });
+        return $this->hasOne('App\Models\wbscte\Student', 'student_reg_no', 'reg_no');
     }
 
    

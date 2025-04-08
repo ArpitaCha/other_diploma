@@ -117,7 +117,7 @@
 
         .student-image {
             max-width: 80px;
-            max-height: 100px;
+            max-height: 80px;
         }
     </style>
 </head>
@@ -128,13 +128,13 @@
             Download Date: {{ date('jS F Y') }}
         </div>
         <div class="heading-text">
-            <img class="logo" src="{{ public_path('logo.png') }}" alt="logo" width="50px">
+            <img class="logo" src="images/logo.png" alt="logo" width="50px">
             <p style="margin:0; padding:0;">WEST BENGAL STATE COUNCIL OF TECHNICAL & VOCATIONAL EDUCATION AND
                 SKILL
                 DEVELOPMENT</p>
             <p style="margin:0; padding:0; font-size: 16px; margin: 5px 0;">Examination Enrollment Form,
                 {{ $academic_year }}</p>
-            <p style="margin:0; padding:0;">CLASS-XI, SEMESTER-{{ $semester }}
+            <p style="margin:0; padding:0;">SEMESTER-{{ $semester }}
             </p>
 
 
@@ -143,7 +143,7 @@
                 <strong style="color: rgb(4, 4, 112)">{{ $inst_name }}</strong>
             </p>
             <p style="font-size: 16px; padding: 0;margin:0;margin-top:3px;">
-                Course: <strong style="color: rgb(4, 4, 112)">{{ $course_id }}</strong>,
+                Course: <strong style="color: rgb(4, 4, 112)">{{ $course_name }}[({{ $course_code }})]</strong>,
 
             </p>
         </div>
@@ -171,15 +171,19 @@
                             <li>Name of the Candidate</li>
                             <li>Reg.No, Session Year</li>
                             <li>Father/Gurdian's Name</li>
+                            {{-- <li>Signautre of candidate</li> --}}
 
                         </ol>
+                        
                     </th>
+                    <th style="text-align: center;">Signature of Candidate </th>
 
                 </tr>
             </thead>
 
             <tbody>
                 @foreach ($students as $key => $student)
+             
                     <tr>
                         <td style="text-align: center;">{{ $key + 1 }}</td>
                         <td style="text-align: left;">
@@ -193,8 +197,13 @@
                                 <li>
                                     {{ $student['guardian'] }}
                                 </li>
-                                <li style="padding-bottom:10px;"></li>
+                                
                             </ol>
+                        </td>
+                        <td style="text-align: center;width: 100px;padding: 10px;">
+                            @if (!is_null($student['signature']))
+                                <img src="{{ $student['signature'] }}" alt="Student Image" class="student-image">
+                            @endif
                         </td>
 
 
@@ -210,7 +219,7 @@
                 <li>
                     Total Amount payable for each candidate is as follows:
                     <ol type="a">
-                        <li>Regular/Casual Candidate for class-XI Rs. {{ $exam_fees }}/- for Examination fee for
+                        <li>Regular/Casual Candidate for Diploma Rs. {{ $exam_fees }}/- for Examination fee for
                             processing of Forms.</li>
                     </ol>
                 </li>

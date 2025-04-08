@@ -16,9 +16,11 @@ use App\Models\wbscte\Fees;
 use App\Models\wbscte\CnfgMarks;
 use Illuminate\Support\Facades\DB;
 use App\Models\wbscte\User;
+use Illuminate\Support\Str;
 use App\Models\wbscte\TheorySubject;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Exception;
 class EnrollmentController extends Controller
 {
@@ -333,12 +335,8 @@ class EnrollmentController extends Controller
             'enrolled_at' => now(),
             'enrolled_by' => $user_id
         ]);
-        // dd($enrolled_data);
         
-        // dd(DB::getQueryLog());
         if($enrolled_data){
-            // dd($fees_amount, $paying_for, $inst_id, $course, $academic_year, $semester);
-           
             Fees::Create([
                 'reg_no' => $reg_no,
                 'inst_id' => $inst_id,
@@ -357,20 +355,6 @@ class EnrollmentController extends Controller
     }
     public function downloadPdf(Request $request)
     {
-        // dd($request->all());
-        // $request->validate([
-        
-        //     'inst_id' => ['required'],
-        //     'inst_name' => ['required'],
-        //     'course_id' => ['required'],
-        //     'academic_year' => ['required'],
-        //     'file_type' => ['required'],
-        
-        //     'semester' => ['required'],
-        //     'type' => ['nullable'],
-        // ]);
-
-     
         $inst_id = $request->inst_id;
         $inst_name = $request->inst_name;
         $course_id = $request->course;
@@ -383,14 +367,6 @@ class EnrollmentController extends Controller
        
        $course_code = $course->course_code;
      
-        // if ($course_code == 'HMCT') {
-        //     $fees_code = 'EXMHMCTS1';
-        //     $late_fees_code = 'EXAMLHMCT';
-        // } else {
-        //     $fees_code = 'EXMOTHS1';
-        //     $late_fees_code = 'EXAMLOTH';
-        // }
-        // dd($course_code);
        $course_name = $course->course_name;
        if($course_code == 'HMCT'){
         $fees_cnfg = ConfigFees::where([
@@ -430,43 +406,37 @@ class EnrollmentController extends Controller
             'inst_id' => $inst_id,
             'course_id' => $course_id,
             'semester' =>  $semester,
-        ])->whereIn('reg_no', $fees_reg_nos)
-            ->with('student')
-            ->get();
-            $enroll = $enrollments->first(); // 👈 Get the first item
-
-dd([
-    'reg_no' => $enroll->reg_no,
-    'student' => $enroll->student,
-    'student_reg_no' => optional($enroll->student)->student_reg_no,
-    'student_fullname' => optional($enroll->student)->student_fullname,
-]);
-           
-            // dd($enrollments);
-           
+        ])
+        ->whereIn('reg_no', $fees_reg_nos)
+        ->with('student') 
+        ->orderBy('reg_no', 'asc')
+        ->get();
+        
+        //   return $enrollments;
 
         if ($enrollments->count()) {
             
             if ($file_type == 'ENROLLMENT_SHEET') {
-                $enroll_list = $enrollments->orderBy('reg_no', 'asc')
-                    ->get()
+                $enroll_list = $enrollments
                     ->map(function ($value, $key) {
-
                         return [
                             'sl_no' => $key + 1,
-                            'stu_name' => $value->student_fullname,
-                            'stu_reg_no' => $value->student_reg_no,
-                            'session_year' => $value->student_session_yr,
+                            'stu_name' => ($value->student)->student_fullname,
+                            'stu_reg_no' => ($value->student)->student_reg_no,
+                            'session_year' => ($value->student)->student_session_yr,
                             'stu_reg_year' => optional($value->student)->student_reg_year,
                             'guardian' => optional($value->student)->student_guardian_name,
-                            // 'image' => $this->studentImage($value->student)
+                            'signature' => $this->studentImage($value->student)
                         ];
                     });
+                    // dd($enroll_list);
 
                     $pdf = Pdf::loadView('exports.enrollment-sheet', [
                         'students' => $enroll_list,
                         'inst_id' => $inst_id,
                         'course_id' => $course_id,
+                        'course_name' => $course_name,
+                        'course_code' => $course_code,
                         'inst_name' => $inst_name,
                         'academic_year' => $academic_year,
                         'exam_fees' => $enrollment_fees,
@@ -493,4 +463,19 @@ dd([
             ]);
         }
     }
+   
+
+private function studentImage($student)
+{
+
+    if ($student->student_signature) {
+        $image_path = public_path("storage/{$student->student_signature}");
+      
+        if (file_exists($image_path)) {
+            return $image_path;
+        }
+    }
+    
+}
+
 }
