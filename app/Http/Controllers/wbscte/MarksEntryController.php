@@ -35,7 +35,6 @@ class MarksEntryController extends Controller
                         $validated = Validator::make($request->all(), [
                             'inst_id' => ['required'],
                             'course_id' => ['required'],
-                            'semester' => ['required'],
                             'paper_type' => ['required'],
                             'session_yr' => ['required'],
                             'paper_id' => ['required'],
@@ -49,7 +48,7 @@ class MarksEntryController extends Controller
                             ]);
                         } else {
                             $session_yr = $request->session_yr;
-                            $semester = $request->semester;
+                            $semester = 'SEMESTER_I';
                             $inst_id = $request->inst_id;
                             $course_id = $request->course_id;
                             $paper_id = $request->paper_id;

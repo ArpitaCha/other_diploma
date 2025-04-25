@@ -17,6 +17,7 @@ use App\Http\Controllers\wbscte\DashboardController;
 use App\Http\Controllers\wbscte\EnrollmentController;
 use App\Http\Controllers\wbscte\AdmissionController;
 use App\Http\Controllers\wbscte\PaymentController;
+use App\Http\Controllers\wbscte\VenueAllocationController;
 
 
 /*
@@ -63,7 +64,7 @@ Route::prefix('master')->group(function () {
     Route::post('/update-cnfg-marks', [CommonController::class, 'updateConfigMarks']);
     Route::delete('/delete-cnfg-marks/{id}', [CommonController::class, 'deleteConfigMarks']);
     Route::post('/get-cnfg-marks', [CommonController::class, 'getConfigMarks']);
-    Route::post('/check-cnfg-marks-schedule', [CommonController::class, 'checkScheduleConfig']);
+    Route::post('/check-cnfg-schedule', [CommonController::class, 'checkScheduleConfig']);
     Route::post('/examiner-notexist-institute',[CommonController::class, 'examinerNotExistInstitute']);
     Route::post('/create-user',[CommonController::class, 'createUser']);
     Route::post('/create-paper',[CommonController::class,'createPaper']);
@@ -97,25 +98,31 @@ Route::prefix('examiner')->group(function () {
     Route::get('/internal-examiner-details/{examiner_id?}', [ExaminerController::class, 'internalExaminerDetails']);
     Route::get('/special-examiner-list/{session_yr?}/{semester?}', [ExaminerController::class, 'specialExaminerList']);
 });
-Route::prefix('attendance')->group(function () {
-    Route::post('/attendance-list', [AttendanceController::class, 'list']);
-    Route::post('/individual-attendance', [AttendanceController::class, 'individualAttendance']);
-    Route::post('/attendance-final-submit', [AttendanceController::class, 'finalAttendanceSubmit']);
-    Route::post('/attendance-lock', [AttendanceController::class, 'attendanceLock']);
-});
-Route::prefix('marks-entry')->group(function () {
-    Route::post('/marks-entry-list', [MarksEntryController::class, 'marksentrylist']);
-    Route::post('/marks-update', [MarksEntryController::class, 'marksUpdate']);
-    Route::post('/marks-final-submit', [MarksEntryController::class, 'marksFinalSubmit']);
-    Route::get('/marks-entry-pdf', [MarksEntryController::class, 'marksPdf']);
-    Route::post('/marks-lock',[MarksEntryController::class, 'marksLock']);
-});
+
+
 Route::prefix('dashboard')->group(function () {
     Route::get('/student-detail/{student_id}', [DashboardController::class, 'studentDetail']);//dashboard/student-detail
 });
-Route::prefix('enrollment')->group(function () {
-    Route::post('/list', [EnrollmentController::class, 'list']);
-    Route::post('/enroll-submit', [EnrollmentController::class, 'submit']);
+Route::prefix('semester-i')->group(function () {
+    Route::prefix('enrollment')->group(function () {
+        Route::post('/list', [EnrollmentController::class, 'list']);
+        Route::post('/submit', [EnrollmentController::class, 'submit']);
+        Route::post('/unlock', [EnrollmentController::class, 'update']);
+        Route::post('/enroll-pdf', [EnrollmentController::class, 'downloadPdf']);
+    });
+    Route::prefix('attendance')->group(function () {
+        Route::post('/list', [AttendanceController::class, 'list']);
+        Route::post('/individual-attendance', [AttendanceController::class, 'individualAttendance']);
+        Route::post('/final-submit', [AttendanceController::class, 'finalAttendanceSubmit']);
+        Route::post('/lock', [AttendanceController::class, 'attendanceLock']);
+    });
+    Route::prefix('marks-entry')->group(function () {
+        Route::post('/list', [MarksEntryController::class, 'marksentrylist']);
+        Route::post('/update', [MarksEntryController::class, 'marksUpdate']);
+        Route::post('/final-submit', [MarksEntryController::class, 'marksFinalSubmit']);
+        Route::get('/pdf', [MarksEntryController::class, 'marksPdf']);
+        Route::post('/lock',[MarksEntryController::class, 'marksLock']);
+    });
 });
 Route::prefix('admission')->group(function () {
     Route::post('/semone-admission-form', [AdmissionController::class, 'semOneadmissionFormSubmit']);
@@ -133,7 +140,10 @@ Route::prefix('admission')->group(function () {
 Route::prefix('payment')->group(function () {
     Route::post('/pay-application-fees', [PaymentController::class, 'payApplicationFees']);
     Route::post('/pay-registration-fees', [PaymentController::class, 'payRegistrationFees']);
-    Route::post('/pay-examination-fees', [PaymentController::class, 'payExaminationFees']);
+    Route::post('/pay-enrollment-fees', [PaymentController::class, 'payEnrollmentFees']);
+});
+Route::prefix('venue-allocation')->group(function () {
+    Route::post('/venue-list', [VenueAllocationController::class, 'list']);
 });
 
 

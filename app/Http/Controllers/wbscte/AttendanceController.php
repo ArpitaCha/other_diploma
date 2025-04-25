@@ -13,6 +13,7 @@ use App\Models\wbscte\Attendance;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\wbscte\TheorySubject;
+use App\Models\wbscte\Enrollment;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use App\Http\Resources\wbscte\AttendanceResource;
@@ -40,7 +41,6 @@ class AttendanceController extends Controller
                         $validated = Validator::make($request->all(), [
                             'inst_id' => ['required'],
                             'course_id' => ['required'],
-                            'semester' => ['required'],
                             'paper_category' => ['required'],
                             'session_yr' => ['required'],
                             'paper_id' => ['required'],
@@ -56,11 +56,27 @@ class AttendanceController extends Controller
                         $session_yr = $request->session_yr;
                         $inst_id = $request->inst_id;
                         $course_id = $request->course_id;
-                        $semester = $request->semester;
                         $paper_id = $request->paper_id;
                         $subject_entry_type = $request->subject_entry_type;
                         $paper_category = $request->paper_category;
+                        $semester = 'SEMESTER_I';
                         $paperDetails = TheorySubject::find($paper_id);
+                        $enrolled_students = Enrollment::where([
+                            'inst_id' => $inst_id,
+                            'course_id' => $course_id,
+                            'semester' => $semester,
+                            'academic_year' => $session_yr,
+                            'is_enrolled' => 1,
+                            'is_paid' => 1,
+                            // 'is_nodal_approved' => 1,
+                        ])->count();
+                
+                        if (!$enrolled_students) {
+                            return response()->json([
+                                'error' => true,
+                                'message' => 'No Student Enrolled'
+                            ]);
+                        }
                         $attend = Attendance::query();
                         $studentList = $attend->clone()->where(['attr_sessional_yr' => $session_yr, 'att_sem' => $semester, 'att_inst_id' => $inst_id, 'att_course_id' => $course_id, 'att_paper_id' => $paper_id, 'att_paper_type' => $paper_category, 'att_paper_entry_type' => $subject_entry_type])->with('student:student_reg_no,student_fullname')->orderBy('att_reg_no', 'asc')->get();
                         //return $studentList;
@@ -271,7 +287,6 @@ class AttendanceController extends Controller
                                     'student_reg_no' => ['required'],
                                     'inst_id' => ['required'],
                                     'course_id' => ['required'],
-                                    'semester' => ['required'],
                                     'paper_category' => ['required'], //Theory or Sessional 1 for theory 2 for Sessional
                                     'session_yr' => ['required'],
                                     'paper_id' => ['required'],
