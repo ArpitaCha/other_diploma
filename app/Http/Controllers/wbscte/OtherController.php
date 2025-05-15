@@ -733,4 +733,13 @@ class OtherController extends Controller
             ->setOption(['defaultFont' => 'sans-serif'])
             ->stream('student-details.pdf');
     }
+
+
+    public function hsvocOnePdf(Request $request)
+    {
+        $pdf = Pdf::loadView('hsvoc_one')->setPaper('a4', 'landscape');
+
+         return $pdf->stream('hsvocone.pdf');
+
+    }
 }

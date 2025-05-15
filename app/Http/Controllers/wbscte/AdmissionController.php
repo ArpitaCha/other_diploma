@@ -115,19 +115,19 @@ class AdmissionController extends Controller
                             $adm_open_status = CnfgMarks::where('config_for', 'APPLICATION')
                                                         ->where('start_at', '<=', $now)  
                                                         ->where('end_at', '>=', $now)   
-                                                        ->where('semester', 'Semester_I')
+                                                        ->where('semester', 'SEMESTER_I')
                                                         ->exists();  
                             //Check Late fee
                             $late_fees = CnfgMarks::where('config_for', 'APPLICATION')
                                                     ->where('late_start_at', '<=', $now) 
-                                                    ->where('semester', 'Semester_I')
+                                                    ->where('semester', 'SEMESTER_I')
                                                     ->exists(); 
                             $course = Course::select('course_code')->where('course_id_pk', $course_id)->first();
                             // dd($course);
                           
                             $results = ConfigFees::select('cf_fees_code', 'cf_fees_type', 'cf_fees_amount')
                                         ->distinct()
-                                        ->where('cf_semester', 'Semester_I')
+                                        ->where('cf_semester', 'SEMESTER_I')
                                         ->where('cf_fees_type', 'APPLICATION');
                                         if($course == 'HMCT'){
                                             if ($request->student_gender == "FEMALE") {
@@ -280,7 +280,7 @@ class AdmissionController extends Controller
                                 $new_student = Student::create([
                                     'student_session_yr' => $session_year,
                                     'student_course_id' => $course_id,
-                                    'student_semester' => 'Semester_I',
+                                    'student_semester' => 'SEMESTER_I',
                                     'student_inst_id' => $request->student_inst_id,
                                     'student_fname' => trim($request->student_fname),
                                     'student_mname' => trim($request->student_mname),
@@ -318,7 +318,7 @@ class AdmissionController extends Controller
                                     'rf_appl_form_num'  => $applicationNumber,
                                     'rf_appl_order_no'  => $applicationNumber.""."001",
                                     'rf_appl_cors_code' => $course->course_code,
-                                    'rf_semester'       => 'Semester_I',
+                                    'rf_semester'       => 'SEMESTER_I',
                                     'rf_fees_type'      => $total_fees[0]->cf_fees_type,
                                     'rf_fees_code'      => $total_fees[0]->cf_fees_code,
                                     'rf_fees_amount'    => $total_fees[0]->cf_fees_amount,
@@ -611,13 +611,14 @@ class AdmissionController extends Controller
                             $adm_open_status = CnfgMarks::where('config_for', 'REGISTRATION')
                                                         ->where('start_at', '<=', $now)  
                                                         ->where('end_at', '>=', $now)   
-                                                        ->where('semester', 'Semester_I')
+                                                        ->where('semester', 'SEMESTER_I')
                                                         ->exists(); 
+                                                       
                             if($adm_open_status)
                             {
                                 $results = ConfigFees::select('cf_fees_code', 'cf_fees_type', 'cf_fees_amount')
                                     ->distinct()
-                                    ->where('cf_semester', 'Semester_I')
+                                    ->where('cf_semester', 'SEMESTER_I')
                                     ->where('cf_fees_type', 'REGISTRATION');
                                     if($course == 'HMCT'){
                                         if ($student_data->student_gender == "FEMALE") {
@@ -640,7 +641,7 @@ class AdmissionController extends Controller
                             }else{
                                 $results = ConfigFees::select('cf_fees_code', 'cf_fees_type', 'cf_fees_amount')
                                     ->distinct()
-                                    ->where('cf_semester', 'Semester_I')
+                                    ->where('cf_semester', 'SEMESTER_I')
                                     ->where('cf_fees_type', 'REGISTRATION');
                                     if($course == 'HMCT'){
                                         $results = $results->where('cf_fees_code', 'REGLTFHMCTS1');
@@ -654,12 +655,13 @@ class AdmissionController extends Controller
                             }
                             
                             $total_fees =  $results->get();
+                            // dd($total_fees);
                             if($total_fees){
                                 $saved_fees = RegisterFees::create([
                                     'rf_appl_form_num'  => $student_data->student_form_num,
                                     'rf_appl_order_no'  => $student_data->student_form_num.""."002",
                                     'rf_appl_cors_code' => $course,
-                                    'rf_semester'       => 'Semester_I',
+                                    'rf_semester'       => 'SEMESTER_I',
                                     'rf_fees_type'      => $total_fees[0]->cf_fees_type,
                                     'rf_fees_code'      => $total_fees[0]->cf_fees_code,
                                     'rf_fees_amount'    => $total_fees[0]->cf_fees_amount,
@@ -723,62 +725,7 @@ class AdmissionController extends Controller
         }
         
     }
-    // public function uploadImageSign(Request $request)
-    // {
-       
-    //     $validator = Validator::make($request->all(), [
-    //         'student_image' => 'required',
-    //         'student_signature' => 'required',
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'error' => $validator->errors()], 422);
-    //     }
-    //     $form_num = $request->form_num;
-    //     $student = Student::where('student_form_num',$form_num)->first();
-    //     $uploadedFiles = [];
-    //     $updated = false; // Track if any updates are made
-
-    //     if ($request->hasFile('student_image')) {
-    //         $image = $request->file('student_image');
-    //         $imageName = $form_num . '_image.' . $image->getClientOriginalExtension();
-    //         $imagePath = 'uploads/profile_pic/' . $imageName;
-            
-    //         $image->storeAs('uploads/profile_pic', $imageName, 'public');
-    //         $student->student_profile_pic = $imagePath;
-    //         $updated = true;
-    //     }
-
-    //     if ($request->hasFile('student_signature')) {
-    //         $signature = $request->file('student_signature');
-    //         $signatureName = $form_num . '_signature.' . $signature->getClientOriginalExtension();
-    //         $signaturePath = 'uploads/signature/' . $signatureName;
-            
-    //         $signature->storeAs('uploads/signature', $signatureName, 'public');
-    //         $student->student_signature = $signaturePath;
-    //         $updated = true;
-    //     }
-
-    //     if ($updated) {
-    //         $student->student_status_s1 = 4;
-    //         $student->save();
-    //         auditTrail($form_num, "{$form_num} - Profile pic and signature updated successfully");
-            
-    //         return response()->json([
-    //             'error' => false,
-    //             'message' => 'Profile photo and signature uploaded successfully!',
-    //         ], 200);
-    //     }
-
-    //     return response()->json([
-    //         'error' => true,
-    //         'message' => 'No file uploaded.',
-    //     ], 400);
-                
-        
-        
-    // }
+    
     public function approvedCouncil(Request $request)
     {
         if ($request->header('token')) {

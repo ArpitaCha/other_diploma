@@ -17,6 +17,20 @@ class Enrollment extends Model
     {
         return $this->hasOne('App\Models\wbscte\Student', 'student_reg_no', 'reg_no');
     }
+    public function institute()
+    {
+        return $this->hasOne('App\Models\wbscte\Institute', 'inst_sl_pk', 'inst_id');
+    }
+    public function venueallocationdetail()
+    {
+        return $this->hasOne('App\Models\wbscte\VenueAllocationDetail', 'inst_id', 'inst_id');
+    }
+     public function course()
+    {
+        return $this->hasOne('App\Models\wbscte\Course', 'course_id_pk', 'course_id');
+    }
+
+
 
    
 }

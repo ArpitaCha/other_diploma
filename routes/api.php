@@ -18,6 +18,8 @@ use App\Http\Controllers\wbscte\EnrollmentController;
 use App\Http\Controllers\wbscte\AdmissionController;
 use App\Http\Controllers\wbscte\PaymentController;
 use App\Http\Controllers\wbscte\VenueAllocationController;
+use App\Http\Controllers\wbscte\AdmitGenerateController;
+use App\Http\Controllers\wbscte\RegistrationCertificateController;
 
 
 /*
@@ -75,6 +77,7 @@ Route::prefix('master')->group(function () {
     Route::post('/count-dashboard', [CommonController::class, 'countDashboard']);
     Route::post('/eligibility-list/{user_type?}',[CommonController::class, 'eligibilityList']);
     Route::post('/eligibility-match',[CommonController::class, 'eligibilityMatch']);
+    Route::get('/center-list/{inst_id}',[CommonController::class, 'instwiseCenter']);
 
 });
 Route::prefix('examiner')->group(function () {
@@ -123,6 +126,21 @@ Route::prefix('semester-i')->group(function () {
         Route::get('/pdf', [MarksEntryController::class, 'marksPdf']);
         Route::post('/lock',[MarksEntryController::class, 'marksLock']);
     });
+    Route::prefix('venue-allocation')->group(function () {
+        Route::post('/alloted-venue', [VenueAllocationController::class, 'allotedVenue']);
+        Route::post('/alloted-list', [VenueAllocationController::class, 'allotedList']);
+    });
+    Route::prefix('admit-generate')->group(function () {
+        Route::get('/student-list/{session}/{inst}/{course}', [AdmitGenerateController::class, 'list']);
+        Route::get('/generate-admit-card-all/{session}/{inst}/{course}', [AdmitGenerateController::class, 'downloadAdmitAll']);
+        Route::get('/generate-admit-card/{reg_no}', [AdmitGenerateController::class, 'downloadAdmit']);
+    });
+    
+});
+Route::prefix('registration')->group(function () {
+    Route::get('/register-student-list/{session}/{inst}/{course}', [RegistrationCertificateController::class, 'list']);
+    Route::get('/download/{reg_no}/{type}', [RegistrationCertificateController::class, 'downloadPdf']);
+   
 });
 Route::prefix('admission')->group(function () {
     Route::post('/semone-admission-form', [AdmissionController::class, 'semOneadmissionFormSubmit']);
@@ -142,9 +160,7 @@ Route::prefix('payment')->group(function () {
     Route::post('/pay-registration-fees', [PaymentController::class, 'payRegistrationFees']);
     Route::post('/pay-enrollment-fees', [PaymentController::class, 'payEnrollmentFees']);
 });
-Route::prefix('venue-allocation')->group(function () {
-    Route::post('/venue-list', [VenueAllocationController::class, 'list']);
-});
+
 
 
 Route::get('/student-attendance-script', [OtherController::class, 'defaultStudentAttendance']);

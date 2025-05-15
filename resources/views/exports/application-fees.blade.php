@@ -25,6 +25,7 @@
 
         .right {
             float: right;
+            margin-right: 50px;
         }
 
         .header {
@@ -147,7 +148,7 @@
 
 
             <div class="right">
-                <label style="left:10px;">Dated: {{ date('d/m/Y') }}</label>
+                <label style="left:200px;">Dated: {{ date('d/m/Y') }}</label>
             </div>
         </div>
         <div style="width:100%; position:absolute;">
@@ -200,10 +201,8 @@
 
     <div class="footer"style="border:1px solid black;margin-top:30px;">
         <div>
-
-            {{-- == 2 and < 3 --}}
-            @if (!empty($payment->trans_id))
-                <h4 style="text-align:center;"><u>MONEY RECEIPT</u></h4>
+            @if ($payment->trans_id)
+            <h4 style="text-align:center;"><u>MONEY RECEIPT</u></h4>
 
                 <p style="padding:5px;">
                     Received <b>Rs.{{ $payment->trans_amount }}/- only</b> through
@@ -212,8 +211,10 @@
                     <b>{{ $students->student_fullname }}</b>, son/daughter of {{ $students->student_guardian_name }}
                     having Application Form Number: <b>{{ $students->student_form_num }}</b>.
                 </p>
+               
             @else
-                <h4 style="text-align:center;"><u>Application Fees Not Paid</u></h4>
+            <h4 style="text-align:center;"><u>Application Fees Paid but payment faild</u></h4>
+                
             @endif
 
         </div>

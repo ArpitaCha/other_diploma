@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\wbscte\RegisterFees;
 use App\Models\wbscte\Payment;
 use App\Models\wbscte\Student;
+use App\Models\wbscte\Enrollment;
+use App\Models\wbscte\ExamRoll;
+use App\Models\wbscte\Fees;
 use App\Models\wbscte\PaymentTransaction;
 class PaymentController extends Controller
 {
@@ -22,7 +25,7 @@ class PaymentController extends Controller
         //dd($total_appl_amount->rf_fees_amount);
         $amount = $total_appl_amount->rf_fees_amount;
         if ($amount > '0') {
-            $other_data = "{$student_data['student_inst_id']}_{$student_data['student_course_id']}_{$student_data['student_session_yr']}_{$student_data['student_payment_for']}_{$student_data['student_application_form_num']}_{$student_data['student_semester']}_{$total_appl_amount['rf_appl_order_no']}";
+            $other_data = "{$student_data['student_inst_id']}_{$student_data['student_course_id']}_{$student_data['student_session_yr']}_{$student_data['student_payment_for']}_{$student_data['student_application_form_num']}_{$student_data['student_semester']}_{$total_appl_amount['rf_appl_order_no']}_{$student_data['student_reg_no']}";
 
             $orderno = $total_appl_amount->rf_appl_order_no;
             $orderid = '';
@@ -71,7 +74,7 @@ class PaymentController extends Controller
         $amount = $total_appl_amount->rf_fees_amount;
 
         if ($amount > '0') {
-            $other_data = "{$student_data['student_inst_id']}_{$student_data['student_course_id']}_{$student_data['student_session_yr']}_{$student_data['student_payment_for']}_{$student_data['student_application_form_num']}_{$student_data['student_semester']}_{$total_appl_amount['rf_appl_order_no']}";
+            $other_data = "{$student_data['student_inst_id']}_{$student_data['student_course_id']}_{$student_data['student_session_yr']}_{$student_data['student_payment_for']}_{$student_data['student_application_form_num']}_{$student_data['student_semester']}_{$total_appl_amount['rf_appl_order_no']}_{$student_data['student_reg_no']}";
         
 
             $orderno = $total_appl_amount->rf_appl_order_no;
@@ -106,30 +109,42 @@ class PaymentController extends Controller
         }
 
     }
-    public function payExaminationFees(Request $request)
+    public function payEnrollmentFees(Request $request)
     {
             $student_data = $request->student_info;
-            $inst_id = $request->inst_id;
-            $course_id = $request->course_id;
-            $paying_for = $request->paying_for;
-            $semester = $request->semester;
-            $academic_year = $request->academic_year;
-            // $user_id = authUserId();
+           
+            $exam_year = $request->exam_year;
+            $user_id = $request->u_id;
+            $inst_id=$request->inst_id;
+            $course_id=$request->course;
+            $paying_for=$request->paying_for;
+           
+            $semester='SEMESTER_I';
     
             $reg_array = collect($request->student_info)->pluck('reg_no')->toArray();
+            // dd($reg_array);
+            
     
-            $fees_data = Fees::where([
-                'inst_id' => $request->inst_id,
-                'course_id' => $request->course_id,
-                'type' => $request->paying_for,
-                'semester' => $request->semester,
-            ])->whereIn('reg_no', $reg_array);
-    
+             $fees_data = Fees::where([
+            'inst_id' => $inst_id,
+            'course_id' => $course_id,
+            'type' => $paying_for,
+            'semester' => $semester,
+        ])->whereIn('reg_no', $reg_array);
+         
             $total_amount = $fees_data->sum('amount');
+            //  dd($total_amount);
             $reg_list = implode(',', $reg_array);
+            $other_data = [];
+
     
             if ($total_amount) {
-                $other_data =  "{$inst_id}_{$course_id}_{$academic_year}_{$paying_for}_{$semester}_{$total_amount}";
+                 foreach ($student_data as $student) {
+                    $form_num = $student['student_form_num'] ?? 'NA';
+                    $reg_no = $student['student_reg_no'] ?? 'NA';
+
+                    $other_data[] = "{$inst_id}_{$course_id}_{$exam_year}_{$paying_for}_{$form_num}_{$semester}_{$total_amount}_{$reg_no}";
+                 }
     
                 $orderid = '';
                 for ($i = 0; $i < 10; $i++) {
@@ -140,19 +155,19 @@ class PaymentController extends Controller
     
                 PaymentTransaction::create([
                     'order_id' => $orderid,
-                    'initiated_by' => authUserId(),
+                    'initiated_by' => $user_id,
                     'initiated_at' => now(),
                     'paying_for' => $paying_for,
-                    'course' => $course,
+                    'course_id' => $course_id,
                     'trans_amount' => $total_amount,
-                    'inst_id' => $inst_id,
+                    // 'inst_id' => $inst_id,
                 ]);
-    
+  
                 $fees_data->update([
                     'order_id' => $orderid,
                 ]);
     
-                auditTrail(authUserId(), "Payment initiated for students: {$reg_list} with order id : {$orderid} for {$paying_for}");
+                auditTrail($user_id, "Payment initiated for students: {$reg_list} with order id : {$orderid} for {$paying_for}");
     
                 return response()->json([
                     'error' => false,
@@ -184,7 +199,7 @@ class PaymentController extends Controller
         $message = $data[7];
         $trans_time = $data[10];
         $marchnt_id = $data[13];
-        $other_data = explode('_', $data[6]);
+        $other_data = explode('_', $data[7]);
 
        
         $inst_id = $other_data[0];
@@ -194,11 +209,15 @@ class PaymentController extends Controller
         $form_num = $other_data[4];
         $semester = $other_data[5];
         $order_number = $other_data[6];
-
+        if (in_array($paying_for, ['ENROLLMENT'])) {
+            $reg_no_arr = explode(',', $other_data[7]);
+        } else {
+            $reg_no_arr = [$other_data[7]];
+        }
         $map = [
             'APPLICATION' => 2,
             'REGISTRATION' => 5,
-            'EXAMINATION' => 7,
+            'ENROLLMENT' => 7,
         ];
         
         $status = $map[$paying_for] ?? null;
@@ -248,6 +267,19 @@ class PaymentController extends Controller
                         'is_paid' => 1,
                         'is_eligible_for_exam' => 1
                     ]);
+                    Student::where([
+                        'student_inst_id' => $inst_id,
+                        'student_session_yr' => $academic_year,
+                        'student_semester' => $semester,
+                        'student_course_id' => $course,
+                       
+                    ])->whereIn('reg_no', $reg_no_arr)
+                        ->update([
+                            'student_exam_fees_status' => 1,
+                            'student_eligible_for_exam' => 1
+                        ]);
+                    
+                    $this->rollnoGenerate($user_id, $inst_id, $course_id,$academic_year, $semester, $reg_no_arr, $reg_year,$exam_year);
                     if ($paying_for === 'EXAMINATION') {
                         auditTrail($reg_no_arr, "Exam fee payment {$trans_status} for reg No are: {$reg_no_arr}, ORDER ID: {$order_id}, TRANSACTION ID: {$trans_id}");
                     } else {
@@ -329,6 +361,90 @@ class PaymentController extends Controller
                 'message' => $e->getMessage()
             ]);
         }
+    }
+    private function attendanceCreate($user_id, $inst_id, $course_id,$academic_year, $semester, $reg_no_arr, $reg_year,$exam_year)
+    {
+        $students = Enrollment::where([
+            'semester' => $semester,
+            'academic_session' => $academic_year,
+            'inst_id' => $inst_id,
+            'course_id' => $course_id,
+            'exam_year' => $exam_year
+        ])->whereIn('reg_no', $reg_no_arr)
+            ->withCount([
+                'attendences' => function (Builder $query) use ($academic_year, $semester) {
+                    $query->where([
+                        'attr_sessional_yr' => $academic_year,
+                        'semester' => $semester,
+                    ]);
+                }
+            ])
+            ->get();
+
+        foreach ($students as $student) {
+            if ($student->attendences_count == 0) {
+                $papers = Paper::select('inst_id', 'course_id','paper_semester')
+                ->where([
+                    'inst_id' => $inst_id,
+                    'course_id' => $course_id,
+                    'paper_semester'=> $semester,
+                    'is_active' => 1
+                ])->get();
+                
+                    foreach ($papers as $paper) {
+                        
+                        foreach ([1, 2] as $entryType) {
+                            Attendance::updateOrCreate([
+                                'attr_sessional_yr' => $academic_year,
+                                'att_inst_id' => $inst_id,
+                                'att_course_id' => $course_id,
+                                'att_reg_no' => $student->reg_no,
+                                'att_sem' => $semester,
+                                'att_paper_id' => $paper->paper_id_pk,
+                                'att_paper_type' => $paper->paper_category,
+                                'att_paper_entry_type' => $entryType
+                            ], [
+                                'att_is_present' => true,
+                                'att_is_absent' => false,
+                                'att_is_ra' => false,
+                                'att_created_on' => now(),
+                                'att_modified_by' => $user_id,
+                            ]);
+                        }
+                    }
+
+                // }
+                
+            }
+        }
+    }
+    private function rollnoGenerate($user_id, $inst_id, $course_id,$academic_year, $semester, $reg_no_arr, $reg_year,$exam_year)
+    {
+        $students = Enrollment::where([
+            'semester' => $semester,
+            'academic_session' => $academic_year,
+            'inst_id' => $inst_id,
+            'course_id' => $course_id,
+            'exam_year' => $exam_year
+        ])->whereIn('reg_no', $reg_no_arr)->get();
+        foreach($students as $value)
+        {
+            $rollNo = generateRollNo($exam_year, $inst_id);
+            ExamRoll::create([
+                'reg_no' => $value->reg_no,
+                'roll_no' => $rollNo,
+                'semester' => $value->semester,
+                'session_yr' => $value->academic_session,
+                'inst_id' => $value->inst_id,
+                'course_id' => $value->course_id,
+                'exam_year' => $value->exam_year,
+                'created_at'=> now(),
+                'created_by'=>$user_id
+            ]);
+            
+
+        }
+
     }
    
     

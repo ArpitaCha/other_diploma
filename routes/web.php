@@ -105,3 +105,4 @@ Route::get('/clear', function () {
 //     Mail::to('abcd@gmail.com')->send(new TestMail());
 // });
 Route::post('send-mail', [AdmissionController::class, 'sendMail']);
+Route::post('status-mail', [AdmissionController::class, 'statusMail']);

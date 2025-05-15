@@ -20,6 +20,7 @@ use App\Models\wbscte\CnfgMarks;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\wbscte\TheorySubject;
+use App\Models\wbscte\Venue;
 use Illuminate\Support\Facades\Validator;
 use App\Models\wbscte\ExternelExaminerMap;
 use App\Http\Resources\wbscte\UserResource;
@@ -232,10 +233,14 @@ class CommonController extends Controller
                         if (in_array('get-all-institute-list', $url_data)) { //check url has permission or not
                             $inst_res = null;
                             $inst_list = Institute::where('inst_sl_pk', '>', 0);
+                        
                             if ($inst_id) {
+                                dd($inst_id);
                                 $inst_list->where('inst_sl_pk', $inst_id);
                             }
+                            dd($inst_list);
                             $inst_res = $inst_list->orderBy('institute_name', 'ASC')->get();
+                          
     
     
                             if (sizeof($inst_res) > 0) {
@@ -310,6 +315,7 @@ class CommonController extends Controller
     public function allCourseList(Request $request, $inst_id = null, $type = null)
     {
         if($type = null){
+          
             if ($request->header('token')) {
                 $now    =   date('Y-m-d H:i:s');
                 $token_check = Token::where('t_token', '=', $request->header('token'))->where('t_expired_on', '>=', $now)->first();
@@ -326,12 +332,13 @@ class CommonController extends Controller
                             $course_res = null;
                             $session = SessionActive::where('is_adm_active', 1)->pluck('session_name')->toArray();
                             
-                            $course_list = Course::where('course_id_pk', '>', 0)->where('is_active',1)->where('course_affiliation_year',$session)->with('institute');
+                            $course_list = Course::where('course_id_pk', '>', 0)->where('is_active',1)->with('institute');
+
                             if ($inst_id) {
                                 $course_list->where('inst_id', $inst_id)->where('is_active',1);
                             }
                             $course_res = $course_list->orderBy('course_name', 'ASC')->get();
-                            //return $course_res;
+                           
     
                             if (sizeof($course_res) > 0) {
                                 $reponse = array(
@@ -377,13 +384,11 @@ class CommonController extends Controller
             $course_res = null;
             $session =SessionActive::where('is_adm_active', 1)->pluck('session_name')->toArray();
                             
-            $course_list = Course::where('course_id_pk', '>', 0)->where('is_active',1)->where('course_affiliation_year',$session)->with('institute');
+            $course_list = Course::where('course_id_pk', '>', 0)->where('is_active',1)->with('institute');
             if ($inst_id) {
                 $course_list->where('inst_id', $inst_id)->where('is_active',1);
             }
             $course_res = $course_list->orderBy('course_name', 'ASC')->get();
-            //return $course_res;
-
             if (sizeof($course_res) > 0) {
                 $reponse = array(
                     'error'     =>  false,
@@ -634,7 +639,31 @@ class CommonController extends Controller
     //Institute wise Course list 
     public function instwiseCourse(Request $request, $type = null)
     {
-        if($type = null){
+       
+        if($type){
+            $course_list = Course::where('is_active', 1)
+                    ->where(['inst_id' => $request->inst_id, 'course_affiliation_year' => $request->sessionYear])
+                    ->get();
+                        //return $course_res;
+
+                        if (sizeof($course_list) > 0) {
+                            $reponse = array(
+                                'error'         =>  false,
+                                'message'       =>  'Course List found',
+                                'count'         =>   sizeof($course_list),
+                                'lists'   =>  CourseResource::collection($course_list)
+                            );
+                            return response(json_encode($reponse), 200);
+                        } else {
+                            $reponse = array(
+                                'error'     =>  true,
+                                'message'   =>  'No Data available'
+                            );
+                            return response(json_encode($reponse), 200);
+                        }
+                 
+            
+        } else{
             if ($request->header('token')) {
                 $now    =   date('Y-m-d H:i:s');
                 $token_check = Token::where('t_token', '=', $request->header('token'))->where('t_expired_on', '>=', $now)->first();
@@ -650,7 +679,7 @@ class CommonController extends Controller
                         if (in_array('course-list', $url_data)) { //check url has permission or not
                             $validated = Validator::make($request->all(), [
                                 'inst_id' => ['required'],
-                                'sessionYear' => ['required'],
+                                // 'sessionYear' => ['required'],
                             ]);
 
                             if ($validated->fails()) {
@@ -661,12 +690,13 @@ class CommonController extends Controller
                             }
                             if ($user_data->u_role_id == '1') { //Super Admin or Council Admin
                                 $course_list = Course::where('is_active', 1)
-                                    ->where(['inst_id' => $request->inst_id, 'course_affiliation_year' => $request->sessionYear])
+                                    ->where(['inst_id' => $request->inst_id])
                                     ->get();
-                            } else if ($user_data->u_role_id == '2') { //Institute Admin
+                            } else if ($user_data->u_role_id == '2') { 
                                 $course_list = Course::where('is_active', 1)
-                                    ->where(['inst_id' => $request->inst_id, 'course_affiliation_year' => $request->sessionYear])
+                                    ->where('inst_id', $request->inst_id)
                                     ->get();
+                               
                             } else if ($user_data->u_role_id == '3') {
                                 // Examiner 
                                 if ($user_data->is_direct == '0') {
@@ -681,7 +711,6 @@ class CommonController extends Controller
 
                                     $course_list = Course::where('is_active', 1)
                                         ->whereIn('course_id_pk', $allCourseIds)
-                                        ->where(['course_affiliation_year' => $request->sessionYear])
                                         ->get();
                                 } else { //Special Examiner
 
@@ -689,12 +718,9 @@ class CommonController extends Controller
 
                                     $course_list = Course::where('is_active', 1)
                                         ->whereIn('course_id_pk', $externalCourseIds)
-                                        ->where(['course_affiliation_year' => $request->sessionYear])
                                         ->get();
                                 }
                             }
-                            //  dd($course_list);
-
                             if (sizeof($course_list) > 0) {
                                 $reponse = array(
                                     'error'         =>  false,
@@ -704,6 +730,7 @@ class CommonController extends Controller
                                 );
                                 return response(json_encode($reponse), 200);
                             } else {
+                               
                                 $reponse = array(
                                     'error'     =>  true,
                                     'message'   =>  'No Data available'
@@ -734,28 +761,7 @@ class CommonController extends Controller
                     'message'   =>  'Unable to process your request due to non availability of token'
                 ], 401);
             }
-        } else{
-            $course_list = Course::where('is_active', 1)
-                    ->where(['inst_id' => $request->inst_id, 'course_affiliation_year' => $request->sessionYear])
-                    ->get();
-                        //return $course_res;
-
-                        if (sizeof($course_list) > 0) {
-                            $reponse = array(
-                                'error'         =>  false,
-                                'message'       =>  'Course List found',
-                                'count'         =>   sizeof($course_list),
-                                'lists'   =>  CourseResource::collection($course_list)
-                            );
-                            return response(json_encode($reponse), 200);
-                        } else {
-                            $reponse = array(
-                                'error'     =>  true,
-                                'message'   =>  'No Data available'
-                            );
-                            return response(json_encode($reponse), 200);
-                        }
-                 
+            
 
         }
     }
@@ -779,10 +785,8 @@ class CommonController extends Controller
                         $validated = Validator::make($request->all(), [
                             'inst_id' => ['required'],
                             'course_id' => ['required'],
-                            'semester' => ['required'],
                             'paper_type' => ['required'],
                             'paper_entry_type' => ['nullable'],
-                            'sessionYear' => ['required'],
                         ]);
 
                         if ($validated->fails()) {
@@ -791,18 +795,20 @@ class CommonController extends Controller
                                 'message' => $validated->errors()
                             ]);
                         }
+                       
                         if ($user_data->u_role_id == '1') { //Super Admin or Council Admin
-                            $paper_list = TheorySubject::where('is_active', 1)->where(['inst_id' => $request->inst_id, 'course_id' => $request->course_id, 'paper_affiliation_year' => $request->sessionYear, 'paper_category' => $request->paper_type, 'paper_semester' => $request->semester])->orderBy('paper_id_pk', 'ASC')->get();
-                        } else if ($user_data->u_role_id == '2') { //Institute Admin
-                            $paper_list = TheorySubject::where('is_active', 1)->where(['inst_id' => $request->inst_id, 'course_id' => $request->course_id, 'paper_affiliation_year' => $request->sessionYear, 'paper_category' => $request->paper_type, 'paper_semester' => $request->semester])->orderBy('paper_id_pk', 'ASC')->get();
+                            $paper_list = TheorySubject::where('is_active', 1)->where(['inst_id' => $request->inst_id, 'course_id' => $request->course_id,  'paper_category' => $request->paper_type, 'paper_semester' => 'SEMESTER_I'])->orderBy('paper_id_pk', 'ASC')->get();
+                        } else if ($user_data->u_role_id == '2') { 
+                            //Institute Admin
+                            $paper_list = TheorySubject::where('is_active', 1)->where(['inst_id' => $request->inst_id, 'course_id' => $request->course_id,  'paper_category' => $request->paper_type, 'paper_semester' => 'SEMESTER_I'])->orderBy('paper_id_pk', 'ASC')->get();
                         } else if ($user_data->u_role_id == '3') { // Examiner 
                             if ($user_data->is_direct == '0') { //Not a special examiner
                                 if ($request->paper_entry_type == '1') { //Internal
-                                    $internalPaperIds = DB::table('wbscte_other_diploma_examiner_institute_tag_master')->select('examiner_paper_id')->where('examiner_user_id', $user_data->u_id)->where('examiner_course_id', $request->course_id)->where('is_active', 1)->where('map_paper_type', $request->paper_type)->where('examiner_part_sem', $request->semester)->pluck('examiner_paper_id');
+                                    $internalPaperIds = DB::table('wbscte_other_diploma_examiner_institute_tag_master')->select('examiner_paper_id')->where('examiner_user_id', $user_data->u_id)->where('examiner_course_id', $request->course_id)->where('is_active', 1)->where('map_paper_type', $request->paper_type)->where('examiner_part_sem', 'SEMESTER_I')->pluck('examiner_paper_id');
                                     $allPaperIds = $internalPaperIds;
                                 } else { //Theory External
                                     //return $internalPaperIds;
-                                    $externalPaperIds = DB::table('wbscte_external_examinner_mapping_master_tbl')->select('map_paper_id')->where('map_examiner_id', $user_data->u_id)->where('map_course_id', $request->course_id)->where('is_active', 1)->where('map_assign_inst_id', $request->inst_id)->where('map_sem', $request->semester)->pluck('map_paper_id'); //->groupBy('map_paper_id')
+                                    $externalPaperIds = DB::table('wbscte_external_examinner_mapping_master_tbl')->select('map_paper_id')->where('map_examiner_id', $user_data->u_id)->where('map_course_id', $request->course_id)->where('is_active', 1)->where('map_assign_inst_id', $request->inst_id)->where('map_sem', 'SEMESTER_I')->pluck('map_paper_id'); //->groupBy('map_paper_id')
                                     $allPaperIds = $externalPaperIds;
                                 }
 
@@ -812,10 +818,11 @@ class CommonController extends Controller
                                 $paper_list = TheorySubject::where('is_active', 1)->whereIn('paper_id_pk', $allPaperIds)->orderBy('paper_id_pk', 'ASC')->get();
                                 //return $paper_list;
                             } else { //Special Examiner
-                                $externalPaperIds = DB::table('wbscte_external_examinner_mapping_master_tbl')->select('map_paper_id')->where('map_examiner_id', $user_data->u_id)->where('map_course_id', $request->course_id)->where('is_active', 1)->where('map_assign_inst_id', $request->inst_id)->where('map_sem', $request->semester)->pluck('map_paper_id');
+                                $externalPaperIds = DB::table('wbscte_external_examinner_mapping_master_tbl')->select('map_paper_id')->where('map_examiner_id', $user_data->u_id)->where('map_course_id', $request->course_id)->where('is_active', 1)->where('map_assign_inst_id', $request->inst_id)->where('map_sem', 'SEMESTER_I')->pluck('map_paper_id');
                                 $paper_list = TheorySubject::where('is_active', 1)->whereIn('paper_id_pk', $externalPaperIds)->orderBy('paper_id_pk', 'ASC')->get();
                             }
                         }
+                        // dd($paper_list);
 
                         if (sizeof($paper_list) > 0) {
                             $reponse = array(
@@ -902,7 +909,7 @@ class CommonController extends Controller
                                 'message'       =>  'Active Session found',
                                 'count'         =>   sizeof($current_session),
                                 'activeSession'   =>  $session,
-                                 'examYears' =>  $examYears
+                                'examYears' =>  $examYears
                        
                             );
                             return response(json_encode($reponse), 200);
@@ -1611,7 +1618,6 @@ class CommonController extends Controller
             ], 401);
         }
     }
-
     public function checkPaper(Request $request)
     {
         if ($request->header('token')) {
@@ -1685,8 +1691,6 @@ class CommonController extends Controller
             ], 401);
         }
     }
-
-    
     public function paperTypeList(Request $request)
     {
         if ($request->header('token')) {
@@ -1849,7 +1853,6 @@ class CommonController extends Controller
             ], 401);
         }
     }
-
     public function entryTypeList(Request $request)
     {
         if ($request->header('token')) {
@@ -2464,34 +2467,26 @@ class CommonController extends Controller
                         ])
                         ->where('start_at', '<=', $now)
                         ->where('end_at', '>=', $now)
-                        ->get();
+                        ->exists();
+                    
 
-                        if (sizeof($result) > 0) {
-                            $reponse = array(
-                                'error'     =>  false,
+                        if ($result) {
+                            return response()->json([
+                                'error' => false,
                                 'data_exists' => true,
-                                'message'   =>  'Data found',
-                                'data'   =>  MarksScheduleResource::collection($result)
-                            );
-                            return response(json_encode($reponse), 200);
-                        } else {
-                            if($request->type == 'MARKS_ENTRY'){
-                                $reponse = array(
-                                    'error'     =>  true,
-                                    'data_exists' => false,
-                                    'message'   =>  'You are unable to marks entry, your marks entry time is expired, please contact admin for details'
-                                );
-                                return response(json_encode($reponse), 200);
-                            }else{
-                                $reponse = array(
-                                    'error'     =>  true,
-                                    'data_exists' => false,
-                                    'message'   =>  'You are unable to attendance, your attendance time is expired, please contact admin for details'
-                                );
-                                return response(json_encode($reponse), 200);
-
-                            }
-                        }
+                                'message' => 'Schedule found'
+                            ], 200);
+                        } 
+                        $messages = [
+                            'MARKS_ENTRY' => 'You are unable to marks entry, your marks entry time is expired, please contact admin for details',
+                            'ATTENDANCE' => 'You are unable to attendance, your attendance time is expired, please contact admin for details',
+                            'ENROLLMENT' => 'You are unable to Enrollment, your enrollment time is expired, please contact admin for details'
+                        ];
+                        return response()->json([
+                            'error' => true,
+                            'data_exists' => false,
+                            'message' => $messages[$request->type] ?? 'Invalid type'
+                        ], 200);
                     } else {
                         return response()->json([
                             'error'     =>  true,
@@ -3335,6 +3330,64 @@ class CommonController extends Controller
         
             
         
+    }
+    public function instwiseCenter(Request $request,$inst_id)
+    {
+        {
+            if ($request->header('token')) {
+                $now    =   date('Y-m-d H:i:s');
+                $token_check = Token::where('t_token', '=', $request->header('token'))->where('t_expired_on', '>=', $now)->first();
+                if ($token_check) {  // check the token is expire or not
+                    $user_id = $token_check->t_user_id;
+                    $user_data = User::select('u_id', 'u_ref', 'u_role_id', 'u_inst_id', 'is_direct')->where('u_id', $user_id)->first();
+                  //  dd($user_data);
+                    $role_url_access_id = DB::table('wbscte_other_diploma_auth_roles_permissions')->where('rp_role_id', $user_data->u_role_id)->pluck('rp_url_id');
+    
+                    if (sizeof($role_url_access_id) > 0) {
+                        $urls = DB::table('wbscte_other_diploma_auth_urls')->where('url_visible', 1)->whereIn('url_id', $role_url_access_id)->get()->toArray();
+                        $url_data = array_column($urls, 'url_name');
+    
+                        if (in_array('venue-list', $url_data)) { //check url has permission or not
+                           
+                            $venue_list = Venue::where('is_active', 1)
+                                ->where('inst_id',$inst_id)
+                                ->orderBy('id', 'DESC')
+                                ->get();
+                            
+                            return response()->json([
+                                'error' => false,
+                                'message' => 'Data found',
+                                'count' => sizeof($venue_list),
+                                'list' => $venue_list
+                            ]);
+                           
+                        } else {
+                            return response()->json([
+                                'error'     =>  true,
+                                'message'   =>   "Oops! you don't have sufficient permission"
+                            ], 403);
+                        }
+                    } else {
+                        return response()->json([
+                            'error'     =>  true,
+                            'message'   =>   "Oops! you don't have sufficient permission"
+                        ], 403);
+                    }
+                } else {
+                    return response()->json([
+                        'error'     =>  true,
+                        'message'   =>  'Unable to process your request due to invalid token'
+                    ], 401);
+                }
+            } else {
+                return response()->json([
+                    'error'     =>  true,
+                    'message'   =>  'Unable to process your request due to non availability of token'
+                ], 401);
+            }
+    
+        }
+
     }
  
    

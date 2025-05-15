@@ -61,6 +61,9 @@ class EnrollmentController extends Controller
                                     $inst_id = $request->inst_id;
                                     $course = $request->course;
                                     $season_year = $request->season_year;
+                                    $paper_id = $request->paper_id;
+                                    
+
                                     $isAdmin = $user_data->u_inst_id == $inst_id;
                                     if($isAdmin){
                                         $enrollment_count = Enrollment::where('inst_id', $inst_id)
@@ -86,10 +89,12 @@ class EnrollmentController extends Controller
                                                             'mother_name' => $student->student_mother_name,
                                                             'reg_year' => $student->student_reg_year,
                                                             'student_dob' => $student->student_dob,
+                                                            'student_form_num'=>$student->student_form_num,
                                                             'is_applied' => (bool)optional($student->enrollment)->is_enrolled,
                                                             'is_enrollment' => (bool)optional($student->enrollment)->is_enrolled && (bool)optional($student->enrollment)->is_paid,
                                                         ];
                                                     });
+                                                    // dd($student_list);
 
                                         if ($student_list->isEmpty()) {
                                             DB::rollBack();
@@ -370,7 +375,6 @@ class EnrollmentController extends Controller
     }
     
     private function studentEnrollment($value, $inst_id, $course, $academic_year, $fees_amount, $paying_for,$user_id,$exam_year)
-    
     {
         $reg_no = $value['reg_no'];
         $reg_year = $value['reg_year'];
@@ -414,6 +418,10 @@ class EnrollmentController extends Controller
                 'academic_session' => $academic_year,
                 'semester' => $semester,
                 'created_at' => now(),
+            ]);
+            Student::where('student_reg_no', $reg_no)->update([
+                'student_is_enrolled' => 1,
+                
             ]);
            
             auditTrail($user_id, "Student of Reg.No {$reg_no} Promoted to {$course} whose institute: {$inst_id}");
@@ -523,10 +531,6 @@ class EnrollmentController extends Controller
                     'message' => 'No Data Found'
                 ]);
             }
-
-    //    }
-
-       
        
     }
     private function studentImage($student)

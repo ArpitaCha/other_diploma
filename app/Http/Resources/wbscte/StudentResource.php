@@ -58,7 +58,7 @@ class StudentResource extends JsonResource
             'is_applied' => $this->student_status_s1 >= 1,//applicatiojn
             'is_paid' => $this->student_status_s1 >= 2,//student appl fees
             'is_verified' => $this->student_status_s1 >= 3,//inst first
-            'is_updated' => $this->student_status_s1 >= 4,//profil_pic
+            // 'is_updated' => $this->student_status_s1 >= 4,//profil_pic
             'is_reg_fees' => $this->student_status_s1 >= 5,//student fees reg
             'is_approved' => $this->student_status_s1 >= 6,//council
             'is_rejected' => $this->student_status_s1 == 9,//rejected
