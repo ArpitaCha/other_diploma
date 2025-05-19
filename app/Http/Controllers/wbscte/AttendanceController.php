@@ -165,7 +165,6 @@ class AttendanceController extends Controller
                             'student_reg_no' => ['required'],
                             'inst_id' => ['required'],
                             'course_id' => ['required'],
-                            'semester' => ['required'],
                             'paper_category' => ['required'], //Theory or Sessional 1 for theory 2 for Sessional
                             'session_yr' => ['required'],
                             'paper_id' => ['required'],
@@ -186,6 +185,7 @@ class AttendanceController extends Controller
                         $present = $request->is_present;
                         $absent = $request->is_absent;
                         $ra = $request->is_ra;
+                        $semester = 'SEMESTER_I';
                         $paper_category = $request->paper_category;
                         $subject_entry_type = $request->subject_entry_type;
                         try {
@@ -396,7 +396,9 @@ class AttendanceController extends Controller
                     $url_data = array_column($urls, 'url_name');
                     if (in_array('marks-lock', $url_data)) {
                         $validated = Validator::make($request->all(), [
-                            'student_id' => ['required'],  
+                            'student_reg_no' => ['required'],  
+                            'subject_entry_type' => ['required'], //1 for Internal 2 for External
+                            'paper_id' => ['required'],
                         ]);
 
                         if ($validated->fails()) {
@@ -407,8 +409,16 @@ class AttendanceController extends Controller
                         }
                         try {
                             DB::beginTransaction(); 
-                            $student_id = $request->student_id; 
-                            $row = Attendance::where('att_id', $student_id)->first();
+                            $student_reg_no = $request->student_reg_no; 
+                            $subject_entry_type = $request->subject_entry_type;
+                            $paper_id = $request->paper_id;
+                            $row = Attendance::where('att_reg_no', $student_reg_no)
+                            ->where('att_paper_entry_type', $subject_entry_type)
+                            ->where('att_paper_id', $paper_id)
+                            ->where('is_final_submit', 1)
+                            ->where('att_sem', 'SEMESTER_I')
+                            ->first();
+                            // dd($row);
 
                         if (!$row) {
                                 DB::rollBack();
@@ -438,7 +448,7 @@ class AttendanceController extends Controller
                                     generateLaravelLog("Marks entry not found for att_id: {$row->att_id}");
                                 }
                             
-                                auditTrail($user_id, "Attendance Final Submit Unlocked for student ID: {$student_id}");
+                                auditTrail($user_id, "Attendance Final Submit Unlocked for student reg: {$student_reg_no}");
                             }
                             
                             DB::commit();

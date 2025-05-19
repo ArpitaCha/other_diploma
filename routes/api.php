@@ -80,27 +80,7 @@ Route::prefix('master')->group(function () {
     Route::get('/center-list/{inst_id}',[CommonController::class, 'instwiseCenter']);
 
 });
-Route::prefix('examiner')->group(function () {
-    Route::post('/examiner-entry', [ExaminerController::class, 'examinerEntry']);
-    Route::post('/internal-examiner-tag', [ExaminerController::class, 'internelExaminerTag']);
-    // Route::post('/internal-examiner-tag-list', [ExaminerController::class, 'internalExaminerTagList']);
-    Route::get('/internal-examiner-tag-list/{session_yr?}/{semester?}', [ExaminerController::class, 'internalExaminerTagList']);
-    Route::get('/internal-examiner-tag-show/{id?}', [ExaminerController::class, 'internalExaminerTagShow']);
-    Route::post('/internal-examiner-update', [ExaminerController::class, 'updateInternalExaminer']);
-    Route::post('/internal-examiner-info-update', [ExaminerController::class, 'updateInternalExaminerEntry']);
-    // Route::post('/internal-examiner-assign-list', [ExaminerController::class, 'InternalExaminerAssignList']);
-    Route::get('/internal-examiner-assign-list/{session_yr?}/{semester?}', [ExaminerController::class, 'InternalExaminerAssignList']);
 
-    Route::post('/internal-examiner-list', [ExaminerController::class, 'internalExamierList']);
-    Route::post('/taggable-institution-list', [ExaminerController::class, 'taggableInstitutionList']);
-    Route::post('/external-examiner-tag', [ExaminerController::class, 'externelExaminerTag']);
-    Route::get('/external-examiner-list/{session_yr?}/{semester?}', [ExaminerController::class, 'externelExaminerList']);
-    Route::post('/internal-examinerwise-institute-list', [ExaminerController::class, 'internalExamierWiseInstituteList']);
-    Route::post('/special-examiner-entry', [ExaminerController::class, 'specialExaminerEntry']);
-    Route::post('/special-examiner-tag', [ExaminerController::class, 'specialExaminerTag']);
-    Route::get('/internal-examiner-details/{examiner_id?}', [ExaminerController::class, 'internalExaminerDetails']);
-    Route::get('/special-examiner-list/{session_yr?}/{semester?}', [ExaminerController::class, 'specialExaminerList']);
-});
 
 
 Route::prefix('dashboard')->group(function () {
@@ -118,6 +98,24 @@ Route::prefix('semester-i')->group(function () {
         Route::post('/individual-attendance', [AttendanceController::class, 'individualAttendance']);
         Route::post('/final-submit', [AttendanceController::class, 'finalAttendanceSubmit']);
         Route::post('/lock', [AttendanceController::class, 'attendanceLock']);
+    });
+    Route::prefix('examiner')->group(function () {
+        Route::post('/examiner-entry', [ExaminerController::class, 'examinerEntry']);
+        Route::post('/internal-examiner-tag', [ExaminerController::class, 'internelExaminerTag']);
+        Route::get('/internal-examiner-tag-list/{session_yr?}/{semester?}', [ExaminerController::class, 'internalExaminerTagList']);
+        Route::get('/internal-examiner-tag-show/{id?}', [ExaminerController::class, 'internalExaminerTagShow']);
+        Route::post('/internal-examiner-update', [ExaminerController::class, 'updateInternalExaminer']);
+        Route::post('/internal-examiner-info-update', [ExaminerController::class, 'updateInternalExaminerEntry']);
+        Route::get('/internal-examiner-assign-list/{session_yr?}/{semester?}', [ExaminerController::class, 'InternalExaminerAssignList']);
+        Route::post('/internal-examiner-list', [ExaminerController::class, 'internalExamierList']);
+        Route::post('/taggable-institution-list', [ExaminerController::class, 'taggableInstitutionList']);
+        Route::post('/external-examiner-tag', [ExaminerController::class, 'externelExaminerTag']);
+        Route::get('/external-examiner-list/{session_yr?}/{semester?}', [ExaminerController::class, 'externelExaminerList']);
+        Route::post('/internal-examinerwise-institute-list', [ExaminerController::class, 'internalExamierWiseInstituteList']);
+        Route::post('/special-examiner-entry', [ExaminerController::class, 'specialExaminerEntry']);
+        Route::post('/special-examiner-tag', [ExaminerController::class, 'specialExaminerTag']);
+        Route::get('/internal-examiner-details/{examiner_id?}', [ExaminerController::class, 'internalExaminerDetails']);
+        Route::get('/special-examiner-list/{session_yr?}/{semester?}', [ExaminerController::class, 'specialExaminerList']);
     });
     Route::prefix('marks-entry')->group(function () {
         Route::post('/list', [MarksEntryController::class, 'marksentrylist']);

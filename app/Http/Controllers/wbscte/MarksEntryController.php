@@ -75,7 +75,6 @@ class MarksEntryController extends Controller
                                         ->where('paper_category', $paper_type)
                                         ->where('inst_id', $inst_id)
                                         ->where('course_id', $course_id)
-                                        ->where('paper_affiliation_year', $session_yr)
                                         ->where('is_active', 1)
                                         ->first();
                                         // return $paper_marks;
@@ -528,7 +527,7 @@ class MarksEntryController extends Controller
     public function marksPdf(Request $request)
     {
         $session_yr = $request->session_yr;
-        $semester = $request->semester;
+        $semester = 'SEMESTER_I';
         $inst_id = $request->inst_id;
         $course_id = $request->course_id;
         $paper_id = $request->paper_id;
@@ -612,8 +611,7 @@ class MarksEntryController extends Controller
                 }
             }
         }
-        if($session_yr == '2023-24')
-        {
+       
             $pdf = Pdf::loadView('exports.marks', [
                 'marks' => $marks,
                 'students' => $finalList,
@@ -623,17 +621,7 @@ class MarksEntryController extends Controller
                 'subject_entry_type'=>$subject_entry_type,
                 'examiner_name' => $examiner_name,
             ]);
-        }else if($session_yr == '2022-23'){
-            $pdf = Pdf::loadView('exports.marks_22', [
-                'marks' => $marks,
-                'students' => $finalList,
-                'internal_attendance_marks' => $internal_attendance_marks,
-                'full_marks'=>$full_marks,
-                'paper_type' =>$paper_type,
-                'subject_entry_type'=>$subject_entry_type,
-                'examiner_name' => $examiner_name,
-            ]);
-        }
+     
         return $pdf->setPaper('a4', 'portrait')
             ->setOption(['defaultFont' => 'sans-serif'])
             ->stream('marks.pdf');
@@ -663,7 +651,11 @@ class MarksEntryController extends Controller
                     $url_data = array_column($urls, 'url_name');
                     if (in_array('marks-lock', $url_data)) {
                         $validated = Validator::make($request->all(), [
-                            'marks_id' => ['required'],  
+                            'student_reg_no' => ['required'],  
+                            'paper_id' => ['required'],
+                            'subject_entry_type' => ['required'],
+                            ''
+                           
                         ]);
 
                         if ($validated->fails()) {
@@ -674,8 +666,15 @@ class MarksEntryController extends Controller
                         }
                         try {
                             DB::beginTransaction();
-                            $marks_id = $request->marks_id; 
-                            $row = MarksEntry::find($marks_id);  
+                             $student_reg_no = $request->student_reg_no; 
+                            $subject_entry_type = $request->subject_entry_type;
+                            $paper_id = $request->paper_id;
+                            $row = MarksEntry::where('stud_reg_no', $student_reg_no)
+                            ->where('paper_entry_type', $subject_entry_type)
+                            ->where('paper_id', $paper_id)
+                            ->where('is_final_submit', 1)
+                            ->where('semester', 'SEMESTER_I')
+                            ->first();;  
 
                             if ($row) {
                                 $row->update([
@@ -688,7 +687,7 @@ class MarksEntryController extends Controller
                                     'message' => 'Marks entry not found.'
                                 ], 404);
                             }
-                            auditTrail($user_id, "Marks entry Final Submit Unlocked for student id: {$marks_id}");
+                            auditTrail($user_id, "Marks entry Final Submit Unlocked for student reg: {$student_reg_no}");
 
                             DB::commit();
                             return response()->json([

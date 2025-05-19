@@ -103,16 +103,18 @@ class RegistrationCertificateController extends Controller
             // Prepare data for PDF
             $data = [
                 'reg_no' => $student->student_reg_no,
+                'student_image' => $student->student_profile_pic,
                 'student_name' => $student->student_fullname,
                 'parent_name' => $student->student_guardian_name,
                 'reg_year' => $student->student_reg_year,
                 'course_name' => $student->course->course_name,
+                'date' => date('d-m-Y'),
             ];
 
             $pdf = Pdf::loadView('exports.registration-certificate', [
                 'student' => $data,
             ]);
-            $pdf->setPaper('A4', 'portrait');
+            $pdf->setPaper('A4', 'landscape');
             $pdf->output();
             $domPdf = $pdf->getDomPDF();
             $canvas = $domPdf->get_canvas();
@@ -128,7 +130,7 @@ class RegistrationCertificateController extends Controller
                     ]);
                 }
             }
-            return $pdf->setPaper('a4', 'portrait')
+            return $pdf->setPaper('a4', 'landscape')
                 ->setOption(['defaultFont' => 'sans-serif'])
                 ->stream("registration.pdf");
 

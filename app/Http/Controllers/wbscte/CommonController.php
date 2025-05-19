@@ -889,7 +889,7 @@ class CommonController extends Controller
                         if ($type == 'regular') {
                             $current_session = DB::table('wbscte_other_diploma_session_tbl')->select('session_name')->where('session_active', 1)->orderBy('session_id_pk')->get();
                         } else {
-                            $current_session = DB::table('wbscte_other_diploma_session_tbl')->select('session_name')->orderBy('session_id_pk')->get();
+                            $current_session = DB::table('wbscte_other_diploma_session_tbl')->select('session_name')->orderBy('session_id_pk','ASC')->get();
                         }
 
                         $session = $current_session->map(function ($value) {

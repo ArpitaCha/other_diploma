@@ -9,217 +9,106 @@
 
     <style>
         body {
-            font-size: 14px;
-            font-family: Cambria;
+            background-image: url("assets/logo_bg.png");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 35%;
+            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            text-align: center;
         }
-
-        .center-margin {
-            border-collapse: collapse;
-            font-weight: bold;
-            text-align: center;
-            margin-top: 5px;
-        }
-
-        .rectangle-image {
-            width: 100px;
-            height: 100px;
-            margin-right: 20px;
-            border: 1px solid #ccc;
-        }
-
-        .rectangle-sign {
-            max-width: 100px;
-            max-height: 20px;
-            border: 1px solid #ccc;
-            text-align: center;
-            line-height: 20px;
-        }
-
-        .small-image {
-            max-width: 100px;
-            max-height: 100px;
-        }
-
-        .small-sign {
-            max-width: 100%;
-            max-height: 100%;
-        }
-
-        table {
-            width: 100%;
-        }
-
         td {
-            padding: 1px 4px;
-            vertical-align: top;
-            font-size: 11px;
+            font-size: 14px;
         }
 
-        .no-border {
-            border: none;
-        }
-
-        .student-details {
+        .left {
             float: left;
             margin-right: 20px;
-            font-size: 20px;
+            margin-left: 15px;
         }
 
-        .student-details p,
-        .image-sign p {
-            font-weight: bold;
+        .right {
+            float: right;
         }
 
-        .student-details td {
+        .header {
             text-align: left;
-            line-height: 15px;
+          
         }
 
-        .subject-combination {
-            text-align: center;
-            font-weight: bold;
-        }
-
-        tr td {
-            text-align: center;
-            font-weight: bold;
-        }
-
-        table.no-border tbody tr td {
-            font-weight: bold;
-        }
-
-        .td-border {
-            border: 1px solid #0505057f;
-        }
-
-        .td-bold {
-            font-weight: bold;
-        }
-
-        .td-height {
-            height: 4px;
-        }
-
-        .logo-container {
-            width: 5px;
+        .main-section {
+            
+            position: relative;
             text-align: left;
+           font-style: italic;
+            /* margin-top: 20px;  */
         }
 
         .logo-container img {
-            width: 50px;
+            width: 70px;
+            height: auto;
             display: block;
-            margin: 0 auto;
+            margin-left: 20px;
         }
 
-        .float-left {
-            text-align: left;
-        }
-
-        .small-text {
-            font-size: 9px;
-            text-align: left;
-        }
-
-        .header-label {
-            float: left;
-            font-weight: bold;
-        }
-
-        .student-details-table td {
-            width: 15%;
-            font-size: 13px;
-        }
-
-        .student-details-table td:nth-child(2) {
-            width: 25%;
-        }
-
-        .table-margin-top {
-            margin-top: 130px;
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 16px;
-        }
-
-        .td-padding {
-            padding: 5px 0;
-        }
-
-        .td-padding-0 {
-            padding: 0px;
-        }
-
-        .td-vertical-align-top {
-            vertical-align: top;
-        }
-
-        .td-text-center {
+        /* .test td{
+             border: 1px solid black;
+        } */
+        .center-horizontally {
+            margin-left: auto;
+            margin-right: auto;
             text-align: center;
         }
 
-        .td-border-0-5 {
-            border: 0.5px solid #000000;
+        .center-both {
+            display: flex;
+            justify-content: center;
+            /* Center horizontally */
+            align-items: center;
+            /* Center vertically */
+            height: 100vh;
+            /* Full height of the viewport */
         }
 
-        .main-container {
-            height: 100%;
+        .rectangle {
+            width: 150px;
+            height: 150px;
+
+            background-color: white;
+            border: 2px solid black;
+            margin-left: 17px;
+            margin-top: 20px;
+        }
+         .rectangle-image {
+            width: 120px;
+            height: 150px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
         }
 
-        .td-width {
-            width: 16%;
+        .rectangle1 {
+            width: 180px;
+            height: 50px;
+            position: center;
+            background-color: white;
+            border: 2px solid black;
+            margin-right: 10px;
+            display: inline-block;
+            margin-top: 20px;
         }
-
-        .page-header {
-            text-align: center;
-            margin-bottom: 100px;
+        .underline {
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            width: 200px; /* Adjust the underline length */
+            height: 18px;
+            vertical-align: bottom;
         }
+        .underline large{
+             display: inline-block;
+            border-bottom: 1px solid #000;
+            width: 500px; /* Adjust the underline length */
+            height: 18px;
+            vertical-align: bottom;
 
-        .image-sign {
-            float: right;
-            margin-right: -25px;
-            margin-top: -20px;
-        }
-
-        .inst-code {
-            float: right;
-            font-weight: bold;
-            margin-top: -10px;
-            padding-right: 6px;
-        }
-
-        .serial-no {
-            float: left;
-            font-weight: bold;
-            margin-top: 60px;
-            margin-left: 5px;
-        }
-
-        .footer {
-            margin-top: 10px;
-        }
-
-        .footer-left {
-            font-weight: 500;
-            float: left;
-        }
-
-        .footer-detail {
-            font-size: 12px;
-            text-align: left;
-            line-height: 5px;
-        }
-
-        .footer-right {
-            float: right;
-            margin-right: 0px;
-        }
-
-        .footer-sign-name {
-            margin-top: -5px;
         }
     </style>
 </head>
@@ -229,69 +118,93 @@
         @php
            
             $student_name = $student['student_name'];
-       
+            $student_image = $student['student_image'];
             $parent_name = $student['parent_name'];
             $reg_no = $student['reg_no'];
             $reg_year = $student['reg_year'];
-          
+            $date = $student['date'];
             $course = $student['course_name'];
         
          
            
         @endphp
 
-        <div class="main-container">
-            {{-- header --}}
-            
+        <div class="header" style="position:relative;">
+       <div class="header-text" style="text-align: left; margin-right: 40px;">
+    <p style="margin: 0; padding: 0; line-height: 1; margin-right: 80px;">
+        <span style="color: black; font-family: Arial, sans-serif; font-size: 14px;">
+            <span style="font-stretch: 115%;">
+                <strong>WEST BENGAL STATE COUNCIL OF TECHNICAL & VOCATIONAL EDUCATION AND SKILL DEVELOPMENT</strong>
+            </span>
+        </span>
+    </p>
 
-            {{-- details --}}
-            <div class="details-container">
-                <div class="student-details">
-                    <table class="no-border student-details-table">
-                        <tbody>
-                            <tr>
-                                <td>Name</td>
-                                <td>:&nbsp;&nbsp;{{ $student_name }}</td>
-                            </tr>
-                            <tr>
-                                <td>Son&nbsp;/&nbsp;Daughter of</td>
-                                <td>:&nbsp;&nbsp;{{ $parent_name }}</td>
-                            </tr>
-                            <tr>
-                                <td>Registration No.</td>
-                                <td>:&nbsp;&nbsp;{{ $reg_no }} of {{ $reg_year }}</td>
-                            </tr>
-                            
-                            
-                            <tr>
-                                <td>Course name&nbsp;/&nbsp;</td>
-                                <td>:&nbsp;&nbsp;{{ $course }}&nbsp;/&nbsp;&nbsp;</td>
-                            </tr>
-                            <tr>
-                                <td>Reg_year&nbsp;/&nbsp;</td>
-                                <td>:&nbsp;&nbsp;{{ $reg_year }}&nbsp;/&nbsp;&nbsp;</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                
-            </div>
-
-            {{-- subjects --}}
-            
-            {{-- exam center --}}
-           
-
-            {{-- footer --}}
-            <div class="footer">
-                <div class="footer-left">
-                    <p class="footer-detail">Dated: </p>
-                    <p class="footer-detail">Place: </p>
-                </div>
-                
+    <div class="right">
+        <div class="image-sign">
+            <div class="rectangle-image">
+                <img src="{{ asset('storage/' . $student_image) }}" style="width: 150px; height: 150px; object-fit: cover;">
             </div>
         </div>
+    </div>
+
+    <p style="margin: 0; padding: 0; line-height: 1; margin-right: 80px;">
+        <span style="font-size: 13px; font-weight: bold;">
+            (Formerly WEST BENGAL STATE COUNCIL OF TECHNICAL EDUCATION)
+        </span>
+    </p>
+
+    <p style="margin: 0; padding: 0; line-height: 1; margin-right: 80px;">
+        <span style="font-size: 12px; font-weight: bold;">
+            "Karigari Bhavan", 4th Floor, Plot No. B/7, Action Area-III, Newtown, Rajarhat, Kolkata-700160
+        </span>
+    </p>
+</div>
+
+        <div>
+          <h2 style="text-align:center; letter-spacing: 10px;margin-bottom:20px;padding:10px;">REGISTRATION CERTIFICATE</h2>
+
+        </div>
+    </div>    
+    <div class="main-section"> 
+            <div style="margin-top: 10px;">
+                <span class="label">Certified that Sri/Smt</span>
+                <span class="underline"style=" width: 700px;text-align:center;">{{ $student_name }}</span>
+            </div>
+            <div style="margin-top: 10px;">
+                <span class="label">son/daughter of</span>
+                <span class="underline"style=" width: 830px;text-align:center;"> {{ $parent_name }} </span>has
+
+            </div>
+            <div style="margin-top: 10px;">
+                <span class="label">been registered as a student under the West bengal State Council of Technical & Vocational Education</span>
+               
+            </div>
+            <div style="margin-top: 10px;">
+                <span class="label">and Skill Development for study</span>
+                <span class="underline"style=" width: 800px;text-align:center;">{{ $course }}</span>
+            </div>
+            <div style="margin-top: 10px;">
+                <span class="label">His/Her Registration number is</span>
+                <span class="underline"style=" width: 760px;text-align:center;">{{ $reg_no }} </span>for the
+            </div>
+            
+            <div style="margin-top: 10px;">
+                <span class="label">Academic Session</span>
+                <span class="underline"style=" width: 500px;text-align:center;">{{ $reg_year }}</span>
+            </div>
+            
+    </div>
+    
+    <div class="footer" style="margin-top: 200px;">
+            <div>
+                <span style="font-style:italic;">Kolkata,the</span>
+                <span style="text-align:center;">{{ $date}}</span>
+                <span class="right"style="font-size:16px;"> Administrative officer(Registration)
+                    <span style="display: block;text-align:center;">WBSCT&VE&SD</span>
+                </span>
+                
+            </div>
+    </div> 
     
 </body>
 

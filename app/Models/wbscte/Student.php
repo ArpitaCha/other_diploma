@@ -55,4 +55,10 @@ class Student extends Model
             return new Enrollment();
         });
     }
+    public function roll()
+    {
+        return $this->hasOne('App\Models\wbscte\ExamRoll', "reg_no", "student_reg_no")->withDefault(function () {
+            return new ExamRoll();
+        });
+    }
 }

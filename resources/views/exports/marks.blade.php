@@ -1,6 +1,9 @@
 <html>
 
 <head>
+     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Marks Entry</title>
     <style>
         @page {
             margin-top: 160px;
@@ -71,11 +74,11 @@
 
 
         <p style="line-height:1;margin:10px 130.13px 2.6px 128.93px;text-align:center;text-indent:0px;">
-            <span style="font-family:Cambria;font-size:13px;">
+            <span style="font-family:Cambria;font-size:12px;">
                 <span style="font-stretch:120%;">
-                    Institute Name : <strong>{{ $students[0]['inst_name'] }}</strong></br> Course Name :
+                    Institute Name : <span>{{ $students[0]['inst_name'] }}</span></br> Course Name :
                         <strong>{{ $students[0]['course_name'] }}</strong></br>
-                        Semester : <strong>{{ $students[0]['semester'] }}</strong></br> Paper :
+                        Paper :
                         <strong style="font-size:12px;">{{ $students[0]['paper'] }}[{{ $students[0]['paper_entry_type'] }}({{ $students[0]['paper_type'] }})]</strong>
                     </span>
             </span>
@@ -86,7 +89,7 @@
  
 
     <div class="main">
-        <table style="border-collapse:collapse;border:1px solid #000000;">
+        <table style="border-collapse:collapse;border:1px solid #000000;margin-top:10px;">
             <thead>
                 <tr>
                     <td style="border:1px solid #000000;height:26.4px;padding:0px;vertical-align:top;">

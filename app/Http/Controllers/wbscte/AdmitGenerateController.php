@@ -11,6 +11,8 @@ use App\Models\wbscte\Institute;
 use App\Models\wbscte\CnfgMarks;
 use App\Models\wbscte\ExamRoll;
 use App\Models\wbscte\TheorySubject;
+use App\Models\wbscte\ExamMonth;
+use App\Models\wbscte\VenueAllocationDetail;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -108,6 +110,28 @@ class AdmitGenerateController extends Controller
                 ]);
             }else{
                 $papers = TheorySubject::select('paper_name','paper_code','paper_category')->where('course_id', $course)->where('inst_id',$inst)->where('paper_semester','SEMESTER_I')->get();
+                $exam_month= ExamMonth::select('month')->where('semester', 'SEMESTER_I')->first();
+                if ($exam_month) {
+                    $month = $exam_month->month;
+                } else {
+                    $month = 'N/A';
+                }
+                 
+
+                $venue= VenueAllocationDetail::select('venue_name')->where('inst_id', $inst)->first();
+                if ($venue) {
+                    $venue_name = $venue->venue_name;
+                } else {
+                    $venue_name = 'N/A';
+                }
+                $semester_map = [
+                    'SEMESTER_I' => '1st Semester',
+                    'SEMESTER_II' => '2nd Semester',
+                    'SEMESTER_III' => '3rd Semester',
+                    'SEMESTER_IV' => '4th Semester',
+                    'SEMESTER_V' => '5th Semester',
+                    'SEMESTER_VI' => '6th Semester',
+                ];
 
                 $students = Student::where('student_inst_id', $inst)
                        ->where('student_course_id', $course)
@@ -117,7 +141,7 @@ class AdmitGenerateController extends Controller
                        ->where('student_semester','SEMESTER_I')
                        ->with('roll', 'institute', 'course')
                        ->get()
-                       ->map(function ($value) use ($papers) {
+                       ->map(function ($value) use ($papers, $month, $venue_name,$semester_map) {
                            return [
                                'reg_no' => $value->student_reg_no,
                                'student_name' => $value->student_fullname,
@@ -126,10 +150,17 @@ class AdmitGenerateController extends Controller
                                'roll_no' => $value->roll->roll_no,
                                'inst_name' => $value->institute->inst_name,
                                'course_name' => $value->course->course_name,
-                               'paper' => $papers, 
-                              
-                           ];
-                       });
+                                'student_profile_pic' => $value->student_profile_pic,
+                                'inst_address' => $value->institute->institute_address,
+                                'exam_month' => $month,
+                                'exam_year' => date('Y'),
+                                'venue' => $venue_name,
+                                'date' => date('d-m-Y'),
+                                'semester' => 'SEMESTER_I',
+                                'semester_label' => $semester_map['SEMESTER_I'],
+                                    
+                            ];
+                            });
                     
 
                 if ($students->isEmpty()) {
@@ -141,19 +172,18 @@ class AdmitGenerateController extends Controller
                 }else{
                     $pdf = Pdf::loadView('admitcard.admitAll', [
                         'students' => $students,
-                       
                         'semester' => 'SEMESTER_I',
                         
                         
                     ]);
 
-                    $pdf->setPaper('A4', 'portrait');
+                    $pdf->setPaper('A4', 'landscape');
                     $pdf->output();
                     $domPdf = $pdf->getDomPDF();
                     $canvas = $domPdf->get_canvas();
                     $canvas->page_text(10, 5, "Page {PAGE_NUM} of {PAGE_COUNT}", null, 10, [0, 0, 0]);
 
-                    return $pdf->setPaper('a4', 'portrait')
+                    return $pdf->setPaper('a4', 'landscape')
                         ->setOption(['defaultFont' => 'sans-serif'])
                         ->stream("download-all.pdf");
 
@@ -187,6 +217,7 @@ class AdmitGenerateController extends Controller
                 ->where('student_semester','SEMESTER_I')
                 ->with('roll', 'institute', 'course')
                 ->first();
+              
                 if ($student == null) {
                    
                     return response()->json([
@@ -198,32 +229,63 @@ class AdmitGenerateController extends Controller
                 ->where('inst_id', $student->student_inst_id)
                 ->where('paper_semester','SEMESTER_I')
                 ->get();
+                $exam_month= ExamMonth::select('month')->where('semester', 'SEMESTER_I')->first();
+                if ($exam_month) {
+                    $month = $exam_month->month;
+                } else {
+                    $month = 'N/A';
+                }
+                 
+
+                 $venue= VenueAllocationDetail::select('venue_name')->where('inst_id', $student->student_inst_id)->first();
+                if ($venue) {
+                    $venue_name = $venue->venue_name;
+                } else {
+                    $venue_name = 'N/A';
+                }
+                $semester_map = [
+                    'SEMESTER_I' => '1st Semester',
+                    'SEMESTER_II' => '2nd Semester',
+                    'SEMESTER_III' => '3rd Semester',
+                    'SEMESTER_IV' => '4th Semester',
+                    'SEMESTER_V' => '5th Semester',
+                    'SEMESTER_VI' => '6th Semester',
+                ];
+
                 $data = [
                     'reg_no' => $student->student_reg_no,
+                    'student_profile_pic' => $student->student_profile_pic,
                     'student_name' => $student->student_fullname,
                     'parent_name' => $student->student_guardian_name,
                     'reg_year' => $student->student_reg_year,
                     'roll_no' => $student->roll->roll_no,
                     'inst_name' => $student->institute->inst_name,
+                    'inst_address' => $student->institute->institute_address,
                     'course_name' => $student->course->course_name,
-                    'paper' => $papers
+                    'paper' => $papers,
+                    'exam_month' => $month,
+                    'exam_year' => date('Y'),
+                     'venue' => $venue_name,
+                     'date' => date('d-m-Y'),
+                      'semester' => 'SEMESTER_I',
+                    'semester_label' => $semester_map['SEMESTER_I'],
                 ];
                 
                     $pdf = Pdf::loadView('admitcard.admit', 
                         [
                             'student' => $data,
-                            'semester' => 'SEMESTER_I',
+                           
                         
                         
                     ]);
 
-                    $pdf->setPaper('A4', 'portrait');
+                    $pdf->setPaper('A4', 'landscape');
                     $pdf->output();
                     $domPdf = $pdf->getDomPDF();
                     $canvas = $domPdf->get_canvas();
                     $canvas->page_text(10, 5, "Page {PAGE_NUM} of {PAGE_COUNT}", null, 10, [0, 0, 0]);
 
-                    return $pdf->setPaper('a4', 'portrait')
+                    return $pdf->setPaper('a4', 'landscape')
                         ->setOption(['defaultFont' => 'sans-serif'])
                         ->stream("admit.pdf");
 
