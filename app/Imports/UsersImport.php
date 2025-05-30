@@ -22,6 +22,9 @@ class UsersImport implements ToCollection, WithHeadingRow
 
     public function collection(Collection $rows)
     {
+        $expectedHeaders = [
+        'id', 'username', 'phone_no', 'u_role_id', 'u_inst_id', 'email','ad'
+    ];
         if ($rows->isEmpty()) {
             throw ValidationException::withMessages([
                 'file' => ['The Excel file is empty.'],
@@ -29,21 +32,22 @@ class UsersImport implements ToCollection, WithHeadingRow
         }
 
         $firstRow = $rows->first();
-      
-
-        $actualHeaders = array_keys($firstRow->toArray());
+        
+        $actualHeaders = array_map(
+            fn($header) => trim(strtolower($header)),
+            array_keys($firstRow->toArray())
+         );
+        $expectedHeaders = array_map('strtolower', $expectedHeaders);
+        $missingHeaders = array_diff($expectedHeaders, $actualHeaders);
        
-        $missingHeaders = array_diff($this->expectedHeaders, $actualHeaders);
 
         if (!empty($missingHeaders)) {
             throw ValidationException::withMessages([
                 'file' => ['Missing or incorrect headers: ' . implode(', ', $missingHeaders)],
             ]);
         }
-        
         foreach ($rows as $row) {
             UserTwo::create([
-                'id'   => $row['id'],
                 'username' => $row['username'],
                 'phone_no' => $row['phone_no'],
                 'u_role_id'   => $row['u_role_id'],

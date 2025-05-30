@@ -45,18 +45,15 @@ Route::get('/logout/{user_id}', [AuthController::class, 'logout']);
 Route::middleware(['authUser'])->group(function(){
     Route::prefix('master')->group(function () {
         Route::get('/user-list', [UsersController::class, 'allUsers']);
-        // Route::get('/state-list/{user_type?}', [CommonController::class, 'allStates']);
+        Route::get('/state-list/{user_type?}', [CommonController::class, 'allStates']);
         Route::get('/district-list/{state_code?}/{user_type?}', [CommonController::class, 'allDistricts'])->withoutMiddleware(['authUser']);
         Route::get('/state-list/{user_type?}', [CommonController::class, 'allStates']);
         Route::get('/subdivision-list/{dist_id?}/{user_type?}', [CommonController::class, 'allSubdivisions'])->withoutMiddleware(['authUser']);
         Route::get('/get-all-institute-list/{inst_id?}/{user_type?}', [CommonController::class, 'allInstList'])->withoutMiddleware(['authUser']);
         Route::get('/all-course/{inst_id?}/{user_type?}', [CommonController::class, 'allCourseList'])->withoutMiddleware(['authUser']);
-        // Route::post('/course-list/{user_type?}', [CommonController::class, 'instwiseCourse']);
-        Route::get('/all-theory-paper', [CommonController::class, 'allTheoryPaperList']);
         Route::get('/active-session/{type}', [CommonController::class, 'activeSession'])->withoutMiddleware(['authUser']);
         Route::post('/institute-list', [CommonController::class, 'userWiseInstitute']);
         Route::post('/update-institute', [CommonController::class, 'updateInstitute']);
-        Route::get('/edit-course/{id}', [CommonController::class, 'editCourse']);
         Route::post('/update-course', [CommonController::class, 'updateCourse']);
         Route::post('/paper-list', [CommonController::class, 'instCourseSessionSemPaperTypewisePaperlist']);
         Route::post('/examiner-list', [CommonController::class, 'examinerList']);

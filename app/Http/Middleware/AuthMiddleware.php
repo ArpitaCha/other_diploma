@@ -44,7 +44,7 @@ class AuthMiddleware
             ], 401);
         }
 
-        $user = User::select('u_id', 'u_ref', 'u_role_id')
+        $user = User::select('u_id', 'u_ref', 'u_role_id','u_inst_id')
                     ->find($token_check->t_user_id);
 
         if (!$user) {

@@ -238,9 +238,6 @@ class CommonController extends Controller
         }else{
             $inst_res = null;
                         $inst_list = Institute::where('inst_sl_pk', '>', 0);
-                        // if ($inst_id) {
-                        //     $inst_list->where('inst_sl_pk', $inst_id);
-                        // }
                         $inst_res = $inst_list->orderBy('institute_name', 'ASC')->get();
 
 
@@ -268,7 +265,6 @@ class CommonController extends Controller
      public function allCourseList(Request $request, $inst_id = null, $type = null)
     {
         if($type = null){
-          
             if ($request->header('token')) {
                 $now    =   date('Y-m-d H:i:s');
                 $token_check = Token::where('t_token', '=', $request->header('token'))->where('t_expired_on', '>=', $now)->first();
@@ -532,7 +528,6 @@ class CommonController extends Controller
                
     }
 
-
     //Institute wise Course list 
     public function instwiseCourse(Request $request, $user_type = null)
     {
@@ -760,12 +755,9 @@ class CommonController extends Controller
     {
         $allowed_urls = $request->get('allowed_urls', []);
         $user_data = $request->get('user_data');  
-
         if (in_array('institute-list', $allowed_urls)) {
             $institute_list = Institute::where('is_active', 1);
-
             if ($user_data->u_role_id == '1') {
-                // Super Admin or Council Admin
                 $institute_list = $institute_list->orderBy('institute_name', 'ASC')->get();
             } elseif ($user_data->u_role_id == '2') {
                 // Institute Admin
@@ -857,77 +849,97 @@ class CommonController extends Controller
         }
     
     }
-    public function editCourse(Request $request, $id)
-    {
-        $allowed_urls = $request->get('allowed_urls', []);
-        if (in_array('edit-course', $allowed_urls)) { //check url has permission or not
-            $course_list = Course::where('course_id_pk', $id)->where('is_active', '1')->orderBy('course_id_pk', 'DESC')->get();
-            if ($course_list) {
-                $reponse = array(
-                    'error'     =>  false,
-                    'message'   =>  'Course found',
-                    'count'     =>  sizeof($course_list),
-                    'courses'  =>  json_encode($course_list)
-                );
-                return response(json_encode($reponse), 200);
-            } else {
-                $reponse = array(
-                    'error'     =>  true,
-                    'message'   =>  'No course available with this id!'
-                );
-                return response(json_encode($reponse), 404);
-            }
-        } else {
-            return response()->json([
-                'error'     =>  true,
-                'message'   =>  "Oops! you don't have sufficient permission"
-            ], 403);
-        }
+    // public function editCourse(Request $request, $id)
+    // {
+    //     $allowed_urls = $request->get('allowed_urls', []);
+    //     if (in_array('edit-course', $allowed_urls)) { //check url has permission or not
+    //         $course_list = Course::where('course_id_pk', $id)->where('is_active', '1')->orderBy('course_id_pk', 'DESC')->get();
+    //         if ($course_list) {
+    //             $reponse = array(
+    //                 'error'     =>  false,
+    //                 'message'   =>  'Course found',
+    //                 'count'     =>  sizeof($course_list),
+    //                 'courses'  =>  json_encode($course_list)
+    //             );
+    //             return response(json_encode($reponse), 200);
+    //         } else {
+    //             $reponse = array(
+    //                 'error'     =>  true,
+    //                 'message'   =>  'No course available with this id!'
+    //             );
+    //             return response(json_encode($reponse), 404);
+    //         }
+    //     } else {
+    //         return response()->json([
+    //             'error'     =>  true,
+    //             'message'   =>  "Oops! you don't have sufficient permission"
+    //         ], 403);
+    //     }
                 
-    }
+    // }
     public function updateCourse(Request $request)
     {
         $allowed_urls = $request->get('allowed_urls', []);
-        if (in_array('update-course', $allowed_urls)) { //check url has permission or not
-            DB::beginTransaction();
-            try {
-                $course = Course::where('course_id_pk', $request->course_id)->first();
-                
-                if ($course) {
-                    $course_id = $course->course_id_pk;
-                    $course->course_type  =  $request->course_type;
-                    $course->course_duration = $request->course_duration;
-                    $course->course_code = $request->course_code;
-                    $course->course_name = $request->course_name;
-                    $course->inst_id = $request->inst_id;
-                    $course->is_active = $request->is_active;
-                    $course->save();
-                    DB::commit();
-                    return response()->json([
-                        'error'     =>  false,
-                        'message'   =>  'Course updated successfully'
-                    ], 200);
-                } else {
-                    $reponse = array(
-                        'error'     =>  true,
-                        'message'   =>  'Course not found'
-                    );
-                    return response(json_encode($reponse), 404);
-                }
-            } catch (Exception $e) {
-                DB::rollback();
-                return response()->json([
-                    'error'     =>  true,
-                    'message'   =>  'An error has occurred' //$e->getMessage()
-                ], 400);
-            }
-        } else {
+
+        if (!in_array('update-course', $allowed_urls)) {
             return response()->json([
-                'error'     =>  true,
-                'message'   =>  "Oops! you don't have sufficient permission"
+                'error' => true,
+                'message' => "Oops! You don't have sufficient permission"
             ], 403);
         }
-                  
+
+        // Validate input
+        $validated = $request->validate([
+            'course_id' => 'required',
+            'course_type' => 'required',
+            'course_duration' => 'required',
+            'course_code' => 'required',
+            'course_name' => 'required',
+            'inst_id' => 'required',
+            'is_active' => 'required',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $course = Course::where('course_id_pk', $validated['course_id'])->first();
+
+            if (!$course) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Course not found'
+                ], 404);
+            }
+
+            $course->update([
+                'course_type' => $validated['course_type'],
+                'course_duration' => $validated['course_duration'],
+                'course_code' => $validated['course_code'],
+                'course_name' => $validated['course_name'],
+                'inst_id' => $validated['inst_id'],
+                'is_active' => $validated['is_active'],
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'error' => false,
+                'message' => 'Course updated successfully'
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();  // Roll back on error
+
+            // Log error instead of using dd()
+            Log::error('Course update failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'error' => true,
+                'message' => 'An error has occurred'
+            ], 400);
+        }
+
+
     }
     public function updateInstitute(Request $request)
     {

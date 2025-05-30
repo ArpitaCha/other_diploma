@@ -15,7 +15,7 @@ class ExcelImportController extends Controller
     {
        try {
                 $request->validate([
-                    'file' => 'required|file|mimes:xlsx,xls',
+                    'file' => 'required'
                 ]);
 
                 Excel::import(new UsersImport, $request->file('file'));
