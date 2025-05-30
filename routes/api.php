@@ -20,6 +20,7 @@ use App\Http\Controllers\wbscte\PaymentController;
 use App\Http\Controllers\wbscte\VenueAllocationController;
 use App\Http\Controllers\wbscte\AdmitGenerateController;
 use App\Http\Controllers\wbscte\RegistrationCertificateController;
+use App\Http\Controllers\ExcelImportController;
 
 
 /*
@@ -40,48 +41,53 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/authenticate', [AuthController::class, 'authenticate']);
 Route::post('/validate-security-code', [AuthController::class, 'validateSecurityCode']);
 Route::get('/logout/{user_id}', [AuthController::class, 'logout']);
-Route::prefix('master')->group(function () {
-    Route::get('/user-list', [UsersController::class, 'allUsers']);
-    // Route::get('/state-list/{user_type?}', [CommonController::class, 'allStates']);
-    Route::get('/district-list/{state_code?}/{user_type?}', [CommonController::class, 'allDistricts']);
-    Route::get('/state-list/{user_type?}', [CommonController::class, 'allStates']);
-    Route::get('/subdivision-list/{dist_id?}/{user_type?}', [CommonController::class, 'allSubdivisions']);
-    Route::get('/get-all-institute-list/{inst_id?}/{user_type?}', [CommonController::class, 'allInstList']);
-    Route::get('/all-course/{inst_id?}/{user_type?}', [CommonController::class, 'allCourseList']);
-    Route::post('/course-list/{user_type?}', [CommonController::class, 'instwiseCourse']);
-    Route::get('/all-theory-paper', [CommonController::class, 'allTheoryPaperList']);
-    Route::get('/active-session/{type}', [CommonController::class, 'activeSession']);
-    Route::post('/institute-list', [CommonController::class, 'userWiseInstitute']);
-    Route::post('/update-institute', [CommonController::class, 'updateInstitute']);
-    Route::get('/edit-course/{id}', [CommonController::class, 'editCourse']);
-    Route::post('/update-course', [CommonController::class, 'updateCourse']);
-    Route::post('/paper-list', [CommonController::class, 'instCourseSessionSemPaperTypewisePaperlist']);
-    Route::post('/examiner-list', [CommonController::class, 'examinerList']);
-    Route::post('/check-paper', [CommonController::class, 'checkPaper']);
-    Route::post('/semester-list', [CommonController::class, 'semesterList']);
-    Route::post('/paper-type-list', [CommonController::class, 'paperTypeList']);
-    Route::post('/entry-type-list', [CommonController::class, 'entryTypeList']);
-    Route::post('/institute-wise-examiner', [CommonController::class, 'instituteWiseExaminer']);
-    Route::post('/create-cnfg-marks', [CommonController::class, 'createConfigMarks']);
-    Route::post('/update-cnfg-marks', [CommonController::class, 'updateConfigMarks']);
-    Route::delete('/delete-cnfg-marks/{id}', [CommonController::class, 'deleteConfigMarks']);
-    Route::post('/get-cnfg-marks', [CommonController::class, 'getConfigMarks']);
-    Route::post('/check-cnfg-schedule', [CommonController::class, 'checkScheduleConfig']);
-    Route::post('/examiner-notexist-institute',[CommonController::class, 'examinerNotExistInstitute']);
-    Route::post('/create-user',[CommonController::class, 'createUser']);
-    Route::post('/create-paper',[CommonController::class,'createPaper']);
-    Route::post('/create-course',[CommonController::class,'createCourse']);
-    Route::post('/create-institute',[CommonController::class,'createInstitute']);
-    Route::post('/update-paper', [CommonController::class, 'updatePaper']);
-    Route::get('/edit-paper/{id}', [CommonController::class, 'editPaper']);
-    Route::post('/count-dashboard', [CommonController::class, 'countDashboard']);
-    Route::post('/eligibility-list/{user_type?}',[CommonController::class, 'eligibilityList']);
-    Route::post('/eligibility-match',[CommonController::class, 'eligibilityMatch']);
-    Route::get('/center-list/{inst_id}',[CommonController::class, 'instwiseCenter']);
 
+Route::middleware(['authUser'])->group(function(){
+    Route::prefix('master')->group(function () {
+        Route::get('/user-list', [UsersController::class, 'allUsers']);
+        // Route::get('/state-list/{user_type?}', [CommonController::class, 'allStates']);
+        Route::get('/district-list/{state_code?}/{user_type?}', [CommonController::class, 'allDistricts'])->withoutMiddleware(['authUser']);
+        Route::get('/state-list/{user_type?}', [CommonController::class, 'allStates']);
+        Route::get('/subdivision-list/{dist_id?}/{user_type?}', [CommonController::class, 'allSubdivisions'])->withoutMiddleware(['authUser']);
+        Route::get('/get-all-institute-list/{inst_id?}/{user_type?}', [CommonController::class, 'allInstList'])->withoutMiddleware(['authUser']);
+        Route::get('/all-course/{inst_id?}/{user_type?}', [CommonController::class, 'allCourseList'])->withoutMiddleware(['authUser']);
+        // Route::post('/course-list/{user_type?}', [CommonController::class, 'instwiseCourse']);
+        Route::get('/all-theory-paper', [CommonController::class, 'allTheoryPaperList']);
+        Route::get('/active-session/{type}', [CommonController::class, 'activeSession'])->withoutMiddleware(['authUser']);
+        Route::post('/institute-list', [CommonController::class, 'userWiseInstitute']);
+        Route::post('/update-institute', [CommonController::class, 'updateInstitute']);
+        Route::get('/edit-course/{id}', [CommonController::class, 'editCourse']);
+        Route::post('/update-course', [CommonController::class, 'updateCourse']);
+        Route::post('/paper-list', [CommonController::class, 'instCourseSessionSemPaperTypewisePaperlist']);
+        Route::post('/examiner-list', [CommonController::class, 'examinerList']);
+        Route::post('/check-paper', [CommonController::class, 'checkPaper']);
+        Route::post('/semester-list', [CommonController::class, 'semesterList']);
+        Route::post('/paper-type-list', [CommonController::class, 'paperTypeList']);
+        Route::post('/entry-type-list', [CommonController::class, 'entryTypeList']);
+        Route::post('/institute-wise-examiner', [CommonController::class, 'instituteWiseExaminer']);
+        Route::post('/create-cnfg-marks', [CommonController::class, 'createConfigMarks']);
+        Route::post('/update-cnfg-marks', [CommonController::class, 'updateConfigMarks']);
+        Route::delete('/delete-cnfg-marks/{id}', [CommonController::class, 'deleteConfigMarks']);
+        Route::post('/get-cnfg-marks', [CommonController::class, 'getConfigMarks']);
+        Route::post('/check-cnfg-schedule', [CommonController::class, 'checkScheduleConfig']);
+        Route::post('/examiner-notexist-institute',[CommonController::class, 'examinerNotExistInstitute']);
+        Route::post('/create-user',[CommonController::class, 'createUser']);
+        Route::post('/create-paper',[CommonController::class,'createPaper']);
+        Route::post('/create-course',[CommonController::class,'createCourse']);
+        Route::post('/create-institute',[CommonController::class,'createInstitute']);
+        Route::post('/update-paper', [CommonController::class, 'updatePaper']);
+        Route::get('/edit-paper/{id}', [CommonController::class, 'editPaper']);
+        Route::post('/count-dashboard', [CommonController::class, 'countDashboard']);
+        Route::post('/eligibility-list/{user_type?}',[CommonController::class, 'eligibilityList'])->withoutMiddleware(['authUser']);
+        Route::post('master/eligibility-match', [CommonController::class, 'eligibilityMatch'])->withoutMiddleware(['authUser']);
+        Route::get('/center-list/{inst_id}',[CommonController::class, 'instwiseCenter']);
+
+    });
+    
 });
 
 
+Route::post('/import-users', [ExcelImportController::class, 'UserImport']);
 
 Route::prefix('dashboard')->group(function () {
     Route::get('/student-detail/{student_id}', [DashboardController::class, 'studentDetail']);//dashboard/student-detail

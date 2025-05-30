@@ -536,11 +536,11 @@ class EnrollmentController extends Controller
     private function studentImage($student)
     {
         if ($student->student_signature) {
-            $image_path = public_path("storage/{$student->student_signature}");
-        
-            if (file_exists($image_path)) {
-                return $image_path;
-            }
+                $image_path = public_path("storage/{$student->student_signature}");
+            
+                if (file_exists($image_path)) {
+                    return $image_path;
+                }
         }
         
     }

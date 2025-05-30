@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\wbscte\TheorySubject;
 use App\Models\wbscte\Enrollment;
+use App\Models\wbscte\Course;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use App\Http\Resources\wbscte\AttendanceResource;
@@ -493,5 +494,22 @@ class AttendanceController extends Controller
             ], 401);
         }
     }
+    public function downloadSheet(Request $request)
+    {
+        $inst_id = $request->inst_id;
+        $inst_name = $request->inst_name;
+        $course_id = $request->course;
+        $academic_year = $request->academic_year;
+        $course = Course::where('course_id_pk', $course_id)->where('is_active',1)->first();
+        $course_code = $course->course_code;
+        $course_name = $course->course_name;
+        $semester = 'SEMESTER_I';
+        $entry_type = $request->entry_type;
+        $subject_category = $request->subject_category;
+    
+            
+            
+    }
+
     
 }
