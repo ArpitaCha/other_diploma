@@ -5,7 +5,7 @@ namespace App\Imports;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use App\Models\UserTwo; 
+use App\Models\wbscte\User; 
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
@@ -17,13 +17,13 @@ class UsersImport implements ToCollection, WithHeadingRow
     * @ @param \Illuminate\Support\Collection $rows
     */
      protected $expectedHeaders = [
-        'id', 'username', 'phone_no', 'u_role_id', 'u_inst_id', 'email'
+        'u_id','u_inst_id', 'u_username','u_fullname', 'u_phone','u_email','bank_account_holder_name','bank_account_no','bank_ifsc','bank_branch_name','u_role_id', 'is_active', 'created_at','updated_at','is_direct','assign_status'
     ];
 
     public function collection(Collection $rows)
     {
         $expectedHeaders = [
-        'id', 'username', 'phone_no', 'u_role_id', 'u_inst_id', 'email','ad'
+       'u_id','u_inst_id', 'u_username','u_fullname', 'u_phone','u_email','bank_account_holder_name','bank_account_no','bank_ifsc','bank_branch_name','u_role_id', 'is_active', 'created_at','updated_at','is_direct','assign_status'
     ];
         if ($rows->isEmpty()) {
             throw ValidationException::withMessages([
@@ -47,12 +47,22 @@ class UsersImport implements ToCollection, WithHeadingRow
             ]);
         }
         foreach ($rows as $row) {
-            UserTwo::create([
-                'username' => $row['username'],
-                'phone_no' => $row['phone_no'],
+            User::create([
+                'u_username' => $row['u_username'],
+                'u_fullname' => $row['u_fullname'],
+                'bank_account_holder_name' => $row['bank_account_holder_name'],
+                'bank_account_no'=> $row['bank_account_no'],
+                'bank_ifsc'=> $row['bank_ifsc'],
+                'bank_branch_name'=> $row['bank_branch_name'],
+                'is_active'=> $row['is_active'],
+                'created_at'=> $row['created_at'],
+                'updated_at'=> $row['updated_at'],
+                'is_direct'=> $row['is_direct'],
+                'assign_status'=> $row['assign_status'],
+                'u_phone' => $row['u_phone'],
                 'u_role_id'   => $row['u_role_id'],
                 'u_inst_id' => $row['u_inst_id'],
-                'email' => $row['email'],
+                'u_email' => $row['u_email'],
             ]);
         }
         

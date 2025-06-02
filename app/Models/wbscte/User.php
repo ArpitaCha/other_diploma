@@ -12,10 +12,7 @@ class User extends Model
     protected $primaryKey   =   'u_id';
     public $timestamps      =   false;
 
-    protected $fillable = [
-        'u_ref', 'u_ct_id', 'u_username', 'u_password', 'u_fullname', 'u_phone', 'u_email', 'bank_account_holder_name', 'bank_account_no', 'bank_ifsc', 'bank_branch_name',
-        'u_role_id', 'is_active', 'is_direct', 'created_at', 'updated_at','u_inst_id'
-    ];
+   protected $guarded = [];
 
     public function role()
     {
