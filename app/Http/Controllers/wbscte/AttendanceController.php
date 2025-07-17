@@ -71,7 +71,7 @@ class AttendanceController extends Controller
                             'is_paid' => 1,
                             // 'is_nodal_approved' => 1,
                         ])->count();
-                
+
                         if (!$enrolled_students) {
                             return response()->json([
                                 'error' => true,
@@ -378,26 +378,26 @@ class AttendanceController extends Controller
         if ($request->header('token')) {
             $now = date('Y-m-d H:i:s');
             $token_check = Token::where('t_token', '=', $request->header('token'))
-                                ->where('t_expired_on', '>=', $now)
-                                ->first();
-            
+                ->where('t_expired_on', '>=', $now)
+                ->first();
+
             if ($token_check) {
                 $user_id = $token_check->t_user_id;
                 $user_data = User::select('u_id', 'u_ref', 'u_role_id', 'u_inst_id')->where('u_id', $user_id)->first();
                 $role_url_access_id = DB::table('wbscte_other_diploma_auth_roles_permissions')
-                                        ->where('rp_role_id', $user_data->u_role_id)
-                                        ->pluck('rp_url_id');
-                
+                    ->where('rp_role_id', $user_data->u_role_id)
+                    ->pluck('rp_url_id');
+
                 if (sizeof($role_url_access_id) > 0) {
                     $urls = DB::table('wbscte_other_diploma_auth_urls')
-                            ->where('url_visible', 1)
-                            ->whereIn('url_id', $role_url_access_id)
-                            ->get()
-                            ->toArray();
+                        ->where('url_visible', 1)
+                        ->whereIn('url_id', $role_url_access_id)
+                        ->get()
+                        ->toArray();
                     $url_data = array_column($urls, 'url_name');
                     if (in_array('marks-lock', $url_data)) {
                         $validated = Validator::make($request->all(), [
-                            'student_reg_no' => ['required'],  
+                            'student_reg_no' => ['required'],
                             'subject_entry_type' => ['required'], //1 for Internal 2 for External
                             'paper_id' => ['required'],
                         ]);
@@ -409,59 +409,55 @@ class AttendanceController extends Controller
                             ]);
                         }
                         try {
-                            DB::beginTransaction(); 
-                            $student_reg_no = $request->student_reg_no; 
+                            DB::beginTransaction();
+                            $student_reg_no = $request->student_reg_no;
                             $subject_entry_type = $request->subject_entry_type;
                             $paper_id = $request->paper_id;
                             $row = Attendance::where('att_reg_no', $student_reg_no)
-                            ->where('att_paper_entry_type', $subject_entry_type)
-                            ->where('att_paper_id', $paper_id)
-                            ->where('is_final_submit', 1)
-                            ->where('att_sem', 'SEMESTER_I')
-                            ->first();
+                                ->where('att_paper_entry_type', $subject_entry_type)
+                                ->where('att_paper_id', $paper_id)
+                                ->where('is_final_submit', 1)
+                                ->where('att_sem', 'SEMESTER_I')
+                                ->first();
                             // dd($row);
 
-                        if (!$row) {
+                            if (!$row) {
                                 DB::rollBack();
                                 return response()->json([
                                     'error' => true,
                                     'message' => 'No data found.'
                                 ], 200);
-                        } else{
-                            $updated = $row->update([
-                                'is_lock' => 1,
-                                'is_final_submit' => 0
-                            ]);
-                            
-                            if ($updated) {
-                               
-                                $marksEntry = MarksEntry::where('att_id', $row->att_id)->first();
-                            
-                                if ($marksEntry) {
+                            } else {
+                                $updated = $row->update([
+                                    'is_lock' => 1,
+                                    'is_final_submit' => 0
+                                ]);
+
+                                if ($updated) {
+
+                                    $marksEntry = MarksEntry::where('att_id', $row->att_id)->first();
+
+                                    if ($marksEntry) {
                                         $marksEntry->update([
                                             "marks" => NULL,
                                             "internal_attendance_marks" => NULL,
                                             "internal_viva_marks" => NULL,
                                             "internal_class_test_marks" => NULL,
                                         ]);
-                                   
-                                } else {
-                                    generateLaravelLog("Marks entry not found for att_id: {$row->att_id}");
+                                    } else {
+                                        generateLaravelLog("Marks entry not found for att_id: {$row->att_id}");
+                                    }
+
+                                    auditTrail($user_id, "Attendance Final Submit Unlocked for student reg: {$student_reg_no}");
                                 }
-                            
-                                auditTrail($user_id, "Attendance Final Submit Unlocked for student reg: {$student_reg_no}");
+
+                                DB::commit();
+
+                                return response()->json([
+                                    'error' => false,
+                                    'message' => 'Attendance has been unlocked successfully.'
+                                ], 200);
                             }
-                            
-                            DB::commit();
-                            
-                            return response()->json([
-                                'error' => false,
-                                'message' => 'Attendance has been unlocked successfully.'
-                            ], 200);
-                            
-
-                        }
-
                         } catch (Exception $e) {
                             DB::rollback();
                             return response()->json([
@@ -494,22 +490,106 @@ class AttendanceController extends Controller
             ], 401);
         }
     }
-    public function downloadSheet(Request $request)
+    public function attendanceSheet(Request $request)
     {
+        $request->validate([
+            'academic_year' => ['required'],
+            'inst_id' => ['required'],
+            'course_id' => ['required'],
+            'semester' => ['required'],
+            'subject_entry_type' => ['required'],
+            'paper_category' => ['required'],
+            'paper_id' => ['required'],
+        ]);
+
         $inst_id = $request->inst_id;
-        $inst_name = $request->inst_name;
-        $course_id = $request->course;
-        $academic_year = $request->academic_year;
-        $course = Course::where('course_id_pk', $course_id)->where('is_active',1)->first();
+        $course_id = $request->course_id;
+        $academic_year = $request->session_yr;
+        $semester = 'SEMESTER_I';
+        $paper_id = $request->paper_id;
+
+        $course = Course::where('course_id_pk', $course_id)
+            ->where('is_active', 1)
+            ->first();
+
+        if (!$course) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Course not found'
+            ]);
+        }
+
         $course_code = $course->course_code;
         $course_name = $course->course_name;
-        $semester = 'SEMESTER_I';
-        $entry_type = $request->entry_type;
-        $subject_category = $request->subject_category;
-    
-            
-            
-    }
 
-    
+        $paperDetails = TheorySubject::select('paper_code', 'paper_name')
+            ->where('paper_id_pk', $paper_id)
+            ->first();
+
+        if (!$paperDetails) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Paper not found'
+            ]);
+        }
+
+        $paper_code = $paperDetails->paper_code;
+        $paper_name = $paperDetails->paper_name;
+
+        $reg_nos = Enrollment::where([
+            'inst_id' => $inst_id,
+            'course_id' => $course_id,
+            'semester' => $semester,
+            'academic_year' => $academic_year,
+            'is_enrolled' => 1,
+            'is_paid' => 1,
+        ])
+            ->where('enrolled_paper', 'LIKE', "%{$paper_code}%")
+            ->pluck('reg_no')
+            ->unique()
+            ->filter()
+            ->toArray();
+
+        if (empty($reg_nos)) {
+            return response()->json([
+                'error' => true,
+                'message' => "No students enrolled in paper {$paper_code}"
+            ]);
+        }
+
+        $student_list = Student::whereIn('student_reg_no', $reg_nos)
+            ->where('student_inst_id', $inst_id)
+            ->select('student_reg_no', 'student_fullname')
+            ->get()
+            ->map(function ($student) {
+                return [
+                    'reg_no' => $student->student_reg_no,
+                    'name' => $student->student_fullname,
+                ];
+            })
+            ->toArray();
+
+        if (empty($student_list)) {
+            return response()->json([
+                'error' => true,
+                'message' => 'No valid student records found'
+            ]);
+        }
+
+        // 🧾 PDF Export using Laravel DOMPDF
+        $pdf = Pdf::loadView('exports.attendence-sheet-pdf', [
+            'academic_year' => $academic_year,
+            'semester' => $semester,
+            'students' => $student_list,
+            'course_name' => $course_name,
+            'course_code' => $course_code,
+            'paper_name' => $paper_name,
+            'paper_code' => $paper_code,
+            'inst_id' => $inst_id,
+        ]);
+
+        return $pdf->setPaper('a4', 'landscape')
+            ->setOption(['defaultFont' => 'sans-serif'])
+            ->stream("attendance-sheet-vtc_{$inst_id}-sem{$semester}-{$academic_year}.pdf");
+    }
 }

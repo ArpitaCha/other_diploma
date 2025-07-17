@@ -139,15 +139,19 @@ class AdmitGenerateController extends Controller
                        ->where('student_is_enrolled', 1)
                        ->where('student_exam_fees_status', 1)
                        ->where('student_semester','SEMESTER_I')
-                       ->with('roll', 'institute', 'course')
+                       ->with('institute', 'course')
                        ->get()
                        ->map(function ($value) use ($papers, $month, $venue_name,$semester_map) {
+                            $parts = explode('/', $value->roll_no);
+                            $no = array_pop($parts); 
+                            $roll = implode('/', $parts); 
                            return [
                                'reg_no' => $value->student_reg_no,
                                'student_name' => $value->student_fullname,
                                'parent_name' => $value->student_guardian_name,
                                'reg_year' => $value->student_reg_year,
-                               'roll_no' => $value->roll->roll_no,
+                                'roll' => $roll,
+                                 'no'=> $no,
                                'inst_name' => $value->institute->inst_name,
                                'course_name' => $value->course->course_name,
                                 'student_profile_pic' => $value->student_profile_pic,
@@ -251,14 +255,19 @@ class AdmitGenerateController extends Controller
                     'SEMESTER_V' => '5th Semester',
                     'SEMESTER_VI' => '6th Semester',
                 ];
-
+                $Roll = $student->roll_no;
+                $parts = explode('/', $Roll);
+                $NO = array_pop($parts);           // "034"
+                $roll = implode('/', $parts);
+                
                 $data = [
                     'reg_no' => $student->student_reg_no,
                     'student_profile_pic' => $student->student_profile_pic,
                     'student_name' => $student->student_fullname,
                     'parent_name' => $student->student_guardian_name,
                     'reg_year' => $student->student_reg_year,
-                    'roll_no' => $student->roll->roll_no,
+                    'roll' => $roll,
+                    'no'=> $NO,
                     'inst_name' => $student->institute->inst_name,
                     'inst_address' => $student->institute->institute_address,
                     'course_name' => $student->course->course_name,

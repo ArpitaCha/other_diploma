@@ -10,6 +10,10 @@ use App\Models\wbscte\Student;
 use App\Models\wbscte\Enrollment;
 use App\Models\wbscte\ExamRoll;
 use App\Models\wbscte\Fees;
+use App\Models\wbscte\Paper;
+use App\Models\wbscte\Institute;
+use App\Models\wbscte\Course;
+use App\Models\wbscte\Attendance;
 use App\Models\wbscte\PaymentTransaction;
 class PaymentController extends Controller
 {
@@ -143,7 +147,7 @@ class PaymentController extends Controller
                     $form_num = $student['student_form_num'] ?? 'NA';
                     $reg_no = $student['student_reg_no'] ?? 'NA';
 
-                    $other_data[] = "{$inst_id}_{$course_id}_{$exam_year}_{$paying_for}_{$form_num}_{$semester}_{$total_amount}_{$reg_no}";
+                    $other_data[] = "{$inst_id}_{$course_id}_{$exam_year}_{$paying_for}_{$form_num}_{$semester}_{$total_amount}_{$reg_no}_{$user_id}";
                  }
     
                 $orderid = '';
@@ -209,8 +213,9 @@ class PaymentController extends Controller
         $form_num = $other_data[4];
         $semester = $other_data[5];
         $order_number = $other_data[6];
+        $user_id = $other_data[7];
         if (in_array($paying_for, ['ENROLLMENT'])) {
-            $reg_no_arr = explode(',', $other_data[7]);
+            $reg_no_arr = explode(',', $other_data[8]);
         } else {
             $reg_no_arr = [$other_data[7]];
         }
@@ -256,30 +261,56 @@ class PaymentController extends Controller
                     'form_no' =>  $form_num,
                     'semester' => $semester
                 ]);
-                EnrollmentDetail::where([
+                Enrollment::where([
                     'inst_id' => $inst_id,
-                    'academic_year' => $academic_year,
+                    'academic_year' => $session_year,
                     'semester' => $semester,
-                    'course_id' => $course,
-                    'session_year' => $academic_year,
+                    'course_id' => $course_id,
+                    'session_year' => $session_year,
                 ])->whereIn('reg_no', $reg_no_arr)
                     ->update([
                         'is_paid' => 1,
                         'is_eligible_for_exam' => 1
                     ]);
-                    Student::where([
+                    $students = Student::where([
                         'student_inst_id' => $inst_id,
-                        'student_session_yr' => $academic_year,
+                        'student_session_yr' => $session_year,
                         'student_semester' => $semester,
-                        'student_course_id' => $course,
+                        'student_course_id' => $course_id,
                        
                     ])->whereIn('reg_no', $reg_no_arr)
                         ->update([
                             'student_exam_fees_status' => 1,
                             'student_eligible_for_exam' => 1
-                        ]);
-                    
-                    $this->rollnoGenerate($user_id, $inst_id, $course_id,$academic_year, $semester, $reg_no_arr, $reg_year,$exam_year);
+                    ]);
+                     foreach ($students as $student) {
+                        $exam_year = $student->exam_year;
+                        $reg_year = $student->reg_year;
+                        $reg_no = $student->reg_no;
+
+                        // You can do something with these values, like call rollnoGenerate:
+                    $this->rollnoGenerate(
+                             $user_id,
+                            $inst_id,
+                            $course_id,
+                            $session_year,
+                            $semester,
+                            [$reg_no],
+                            $reg_year,
+                            $exam_year
+                        );
+                    }    
+                    $this->attendanceCreate(
+                        $request->u_id,
+                        $inst_id,
+                        $course_id,
+                        $session_year,
+                        $semester,
+                        $reg_no_arr,
+                        $reg_year,
+                        $exam_year
+                    );
+                  
                     if ($paying_for === 'EXAMINATION') {
                         auditTrail($reg_no_arr, "Exam fee payment {$trans_status} for reg No are: {$reg_no_arr}, ORDER ID: {$order_id}, TRANSACTION ID: {$trans_id}");
                     } else {
@@ -418,8 +449,10 @@ class PaymentController extends Controller
             }
         }
     }
-    private function rollnoGenerate($user_id, $inst_id, $course_id,$academic_year, $semester, $reg_no_arr, $reg_year,$exam_year)
+    private function rollnoGenerate($user_id,$inst_id, $course_id,$academic_year, $semester, $reg_no_arr, $reg_year,$exam_year)
     {
+        $inst = Institute::select('inst_code')->where('inst_sl_pk',$inst_id)->first();
+        $course = Course::select('course_code')->where('inst_id',$inst_id)->first();
         $students = Enrollment::where([
             'semester' => $semester,
             'academic_session' => $academic_year,
@@ -429,21 +462,18 @@ class PaymentController extends Controller
         ])->whereIn('reg_no', $reg_no_arr)->get();
         foreach($students as $value)
         {
-            $rollNo = generateRollNo($exam_year, $inst_id);
-            ExamRoll::create([
-                'reg_no' => $value->reg_no,
-                'roll_no' => $rollNo,
-                'semester' => $value->semester,
-                'session_yr' => $value->academic_session,
-                'inst_id' => $value->inst_id,
-                'course_id' => $value->course_id,
-                'exam_year' => $value->exam_year,
-                'created_at'=> now(),
-                'created_by'=>$user_id
-            ]);
-            
+             $student = Student::where('student_reg_no', $value->reg_no)->first();
+    
+            if ($student && $inst && $course) {
+                $rollNo = $inst->inst_code . '/' . $course->course_code . '/sem' . $semester . '/' . $student->student_id_pk;
+
+                $student->update([
+                    'student_roll_no' => $rollNo,
+                ]);
+            }
 
         }
+         auditTrail($user_id, 'Roll numbers generated by institute ' . $inst_id . ' for registration numbers: ' . implode(', ', $reg_no_arr));
 
     }
    
